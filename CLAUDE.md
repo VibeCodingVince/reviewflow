@@ -47,6 +47,9 @@ supabase/migrations/     # SQL schema with RLS policies
 - **API routes** all follow try/catch pattern with auth check via `supabase.auth.getUser()`
 - **Client pages** use "use client" directive and fetch data in useEffect with useCallback
 - **Middleware** redirects unauthenticated users to /login and authenticated users away from auth pages
+- **Onboarding flow:** signup → dashboard (3-step checklist) → add business → auto-redirect to business detail → Connect Google banner → OAuth → auto-pull reviews via `?connected=true` query param → generate replies
+- **Google OAuth callback** redirects to `/dashboard/{businessId}?connected=true` — business detail page auto-syncs reviews on that param
+- **`connectGoogle()` helper** exists in both `settings/page.tsx` and `[businessId]/page.tsx` (duplicated, ~5 lines each)
 
 ## Database Tables
 - `users` — linked to auth.users, has stripe_customer_id, subscription_status/tier

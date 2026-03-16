@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -23,11 +23,15 @@ import {
   FileText,
   Wand2,
   Send,
+  RefreshCw,
+  ExternalLink,
 } from "lucide-react";
 import type { Business, Review, ReplyStatus } from "@/lib/types";
 
 export default function BusinessReviewsPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const businessId = params.businessId as string;
   const [business, setBusiness] = useState<Business | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -37,6 +41,8 @@ export default function BusinessReviewsPage() {
   const [processingReview, setProcessingReview] = useState<string | null>(null);
   const [bulkGenerating, setBulkGenerating] = useState(false);
   const [csvUploading, setCsvUploading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const hasAutoSynced = useRef(false);
   const supabase = createClient();
   const { toast } = useToast();
 
@@ -58,6 +64,53 @@ export default function BusinessReviewsPage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  async function pullReviews() {
+    setSyncing(true);
+    try {
+      const res = await fetch("/api/reviews/pull", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ business_id: businessId }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        toast({
+          title: "Reviews synced",
+          description: `${data.new_reviews} new review${data.new_reviews !== 1 ? "s" : ""} found`,
+        });
+        fetchData();
+      } else {
+        toast({
+          title: "Sync failed",
+          description: data.error,
+          variant: "destructive",
+        });
+      }
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to sync reviews",
+        variant: "destructive",
+      });
+    }
+    setSyncing(false);
+  }
+
+  // Auto-pull reviews after Google connect
+  useEffect(() => {
+    if (
+      searchParams.get("connected") === "true" &&
+      !hasAutoSynced.current
+    ) {
+      hasAutoSynced.current = true;
+      toast({ title: "Google connected!", description: "Pulling your reviews..." });
+      router.replace(`/dashboard/${businessId}`);
+      pullReviews();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const filteredReviews =
     activeTab === "all"
@@ -222,6 +275,16 @@ export default function BusinessReviewsPage() {
     e.target.value = "";
   }
 
+  function connectGoogle() {
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    const redirectUri = `${window.location.origin}/api/auth/google/callback`;
+    const scope = encodeURIComponent(
+      "https://www.googleapis.com/auth/business.manage"
+    );
+    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent&state=${businessId}`;
+    window.location.href = url;
+  }
+
   function StarRating({ rating }: { rating: number }) {
     return (
       <div className="flex gap-0.5">
@@ -317,6 +380,22 @@ export default function BusinessReviewsPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          {business.google_refresh_token && (
+            <Button
+              variant="outline"
+              className="h-9 rounded-xl font-body text-sm border-gray-200"
+              onClick={pullReviews}
+              disabled={syncing}
+            >
+              {syncing ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <RefreshCw className="w-4 h-4 mr-2" />
+              )}
+              Sync Reviews
+            </Button>
+          )}
+
           <Button
             variant="outline"
             className="h-9 rounded-xl font-body text-sm border-gray-200"
@@ -356,6 +435,56 @@ export default function BusinessReviewsPage() {
           </label>
         </div>
       </div>
+
+      {/* Connect Google banner */}
+      {!business.google_refresh_token && reviews.length === 0 && (
+        <Card className="rounded-2xl border-2 border-primary/20 bg-primary/[0.02]">
+          <CardContent className="p-6 flex flex-col sm:flex-row items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+              <ExternalLink className="w-6 h-6 text-primary" />
+            </div>
+            <div className="flex-1 text-center sm:text-left">
+              <h3 className="font-display text-lg text-foreground">
+                Connect Google to pull reviews
+              </h3>
+              <p className="text-sm text-muted-foreground font-body mt-1">
+                Link your Google Business Profile to automatically import reviews and reply with AI.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Button
+                className="h-10 px-5 rounded-xl bg-primary text-white font-body font-medium hover:bg-primary/90"
+                onClick={connectGoogle}
+              >
+                Connect Google
+              </Button>
+              <label>
+                <input
+                  type="file"
+                  accept=".csv"
+                  className="hidden"
+                  onChange={handleCsvUpload}
+                />
+                <Button
+                  variant="outline"
+                  className="h-10 rounded-xl font-body text-sm border-gray-200 cursor-pointer"
+                  asChild
+                  disabled={csvUploading}
+                >
+                  <span>
+                    {csvUploading ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4 mr-2" />
+                    )}
+                    Import CSV Instead
+                  </span>
+                </Button>
+              </label>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -401,9 +530,34 @@ export default function BusinessReviewsPage() {
             <Card className="rounded-2xl border-dashed border-2 border-gray-200">
               <CardContent className="p-12 text-center">
                 <FileText className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                <p className="text-sm text-muted-foreground font-body">
-                  No reviews in this category
-                </p>
+                {reviews.length === 0 && !business.google_refresh_token ? (
+                  <p className="text-sm text-muted-foreground font-body">
+                    Connect Google above to pull in your reviews
+                  </p>
+                ) : reviews.length === 0 && business.google_refresh_token ? (
+                  <>
+                    <p className="text-sm text-muted-foreground font-body mb-3">
+                      No reviews found yet. Click Sync Reviews to check.
+                    </p>
+                    <Button
+                      variant="outline"
+                      className="h-9 rounded-xl font-body text-sm border-gray-200"
+                      onClick={pullReviews}
+                      disabled={syncing}
+                    >
+                      {syncing ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                      )}
+                      Sync Reviews
+                    </Button>
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground font-body">
+                    No reviews in this category
+                  </p>
+                )}
               </CardContent>
             </Card>
           ) : (

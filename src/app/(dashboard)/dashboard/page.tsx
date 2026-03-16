@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -32,8 +33,11 @@ import {
   Clock,
   TrendingUp,
   ExternalLink,
-  Building2,
   Loader2,
+  Circle,
+  RefreshCw,
+  Sparkles,
+  AlertCircle,
 } from "lucide-react";
 import type { Business } from "@/lib/types";
 
@@ -64,6 +68,7 @@ export default function DashboardPage() {
     tone: "friendly",
   });
   const [saving, setSaving] = useState(false);
+  const router = useRouter();
   const supabase = createClient();
   const { toast } = useToast();
 
@@ -109,14 +114,18 @@ export default function DashboardPage() {
 
     if (!user) return;
 
-    const { error } = await supabase.from("businesses").insert({
-      user_id: user.id,
-      business_name: newBusiness.business_name,
-      business_type: newBusiness.business_type,
-      tone: newBusiness.tone,
-    });
+    const { data: newBiz, error } = await supabase
+      .from("businesses")
+      .insert({
+        user_id: user.id,
+        business_name: newBusiness.business_name,
+        business_type: newBusiness.business_type,
+        tone: newBusiness.tone,
+      })
+      .select()
+      .single();
 
-    if (error) {
+    if (error || !newBiz) {
       toast({
         title: "Error",
         description: "Failed to add business",
@@ -126,7 +135,7 @@ export default function DashboardPage() {
       toast({ title: "Success", description: "Business added!" });
       setAddDialogOpen(false);
       setNewBusiness({ business_name: "", business_type: "", tone: "friendly" });
-      fetchData();
+      router.push(`/dashboard/${newBiz.id}`);
     }
 
     setSaving(false);
@@ -297,24 +306,66 @@ export default function DashboardPage() {
 
       {/* Businesses */}
       {businesses.length === 0 ? (
-        <Card className="rounded-2xl border-dashed border-2 border-gray-200">
-          <CardContent className="p-12 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-primary/5 flex items-center justify-center mx-auto mb-4">
-              <Building2 className="w-8 h-8 text-primary/40" />
-            </div>
-            <h3 className="font-display text-xl text-foreground mb-2">
-              No Businesses Yet
+        <Card className="rounded-2xl border-gray-100">
+          <CardContent className="p-8 md:p-12">
+            <h3 className="font-display text-xl text-foreground mb-2 text-center">
+              Get Started in 3 Steps
             </h3>
-            <p className="text-sm text-muted-foreground font-body mb-6 max-w-sm mx-auto">
-              Add your first business to start managing Google reviews with AI.
+            <p className="text-sm text-muted-foreground font-body mb-8 text-center max-w-md mx-auto">
+              You&apos;ll be replying to reviews with AI in minutes.
             </p>
-            <Button
-              onClick={() => setAddDialogOpen(true)}
-              className="h-10 px-5 rounded-xl bg-primary text-white font-body font-medium"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Your First Business
-            </Button>
+            <div className="space-y-4 max-w-sm mx-auto">
+              {/* Step 1 — Add business (active) */}
+              <button
+                onClick={() => setAddDialogOpen(true)}
+                className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-primary/30 bg-primary/[0.03] hover:bg-primary/[0.06] transition-colors text-left"
+              >
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <span className="font-display text-primary text-sm">1</span>
+                </div>
+                <div className="flex-1">
+                  <p className="font-body font-semibold text-sm text-foreground">
+                    Add your business
+                  </p>
+                  <p className="text-xs text-muted-foreground font-body">
+                    Tell us your business name and type
+                  </p>
+                </div>
+                <Plus className="w-5 h-5 text-primary shrink-0" />
+              </button>
+
+              {/* Step 2 — Connect Google (locked) */}
+              <div className="flex items-center gap-4 p-4 rounded-xl border border-gray-200 bg-gray-50/50 opacity-60">
+                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                  <span className="font-display text-gray-400 text-sm">2</span>
+                </div>
+                <div className="flex-1">
+                  <p className="font-body font-semibold text-sm text-gray-400">
+                    Connect Google Reviews
+                  </p>
+                  <p className="text-xs text-gray-400 font-body">
+                    Import reviews from your Google Business Profile
+                  </p>
+                </div>
+                <Circle className="w-5 h-5 text-gray-300 shrink-0" />
+              </div>
+
+              {/* Step 3 — Generate replies (locked) */}
+              <div className="flex items-center gap-4 p-4 rounded-xl border border-gray-200 bg-gray-50/50 opacity-60">
+                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                  <span className="font-display text-gray-400 text-sm">3</span>
+                </div>
+                <div className="flex-1">
+                  <p className="font-body font-semibold text-sm text-gray-400">
+                    Generate AI Replies
+                  </p>
+                  <p className="text-xs text-gray-400 font-body">
+                    Let Claude craft perfect responses to every review
+                  </p>
+                </div>
+                <Circle className="w-5 h-5 text-gray-300 shrink-0" />
+              </div>
+            </div>
           </CardContent>
         </Card>
       ) : (
@@ -381,6 +432,33 @@ export default function DashboardPage() {
                       </p>
                     </div>
                   </div>
+
+                  {/* Contextual nudge */}
+                  {!business.google_refresh_token ? (
+                    <Link
+                      href={`/dashboard/${business.id}`}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 text-xs font-body hover:bg-amber-100 transition-colors"
+                    >
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      Connect Google to get started
+                    </Link>
+                  ) : reviewCount === 0 ? (
+                    <Link
+                      href={`/dashboard/${business.id}`}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 text-xs font-body hover:bg-blue-100 transition-colors"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5 shrink-0" />
+                      Sync your reviews
+                    </Link>
+                  ) : pendingCount > 0 ? (
+                    <Link
+                      href={`/dashboard/${business.id}`}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/5 border border-primary/20 text-primary text-xs font-body hover:bg-primary/10 transition-colors"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                      {pendingCount} review{pendingCount !== 1 ? "s" : ""} need{pendingCount === 1 ? "s" : ""} replies
+                    </Link>
+                  ) : null}
 
                   <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                     <div className="flex items-center gap-2">

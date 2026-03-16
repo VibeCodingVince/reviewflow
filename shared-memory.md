@@ -6,10 +6,21 @@
 
 ## Current Status
 - **Last updated:** 2026-03-16 (Mac session)
-- **Phase:** Initial build complete. All 5 phases done. Project compiles and builds successfully.
-- **Last session (Mac):** Cloned repo to Mac. Fixed hero section demo — changed AI reply sign-off from "The Green Table" to "[Your Business Name]" and label from "AI-GENERATED REPLY" to "Reply from [Your Business Name]" to make the demo more realistic. Set up local Claude memory on Mac.
+- **Phase:** Initial build complete + self-serve onboarding implemented
+- **Last session:** Implemented full self-serve onboarding plan — users can now go from signup to first AI reply without a walkthrough call. No new pages/routes/DB changes, all enhancements to existing files.
 - **Repo:** https://github.com/VibeCodingVince/reviewflow
-- **Build status:** Clean — `npm run build` passes with no errors
+- **Build status:** Clean — `npm run build` compiles and lints with no errors (pre-existing static export warnings for pages needing env vars remain)
+
+### What was done this session
+1. **Business detail page (`[businessId]/page.tsx`):**
+   - Added "Sync Reviews" button (calls `POST /api/reviews/pull`) next to "Generate All Replies"
+   - Added `?connected=true` auto-pull: after Google OAuth, reviews sync automatically with toast
+   - Added "Connect Google" banner when no token + no reviews (with CSV fallback)
+   - Context-aware empty states: no token → connect prompt, has token + no reviews → sync prompt, filter empty → category message
+2. **Dashboard page (`dashboard/page.tsx`):**
+   - `handleAddBusiness` now uses `.select().single()` and redirects to `/dashboard/${newBiz.id}`
+   - Replaced "No Businesses Yet" empty state with 3-step onboarding checklist (add business active, steps 2-3 locked/gray)
+   - Added contextual nudges on business cards: yellow "Connect Google", blue "Sync reviews", green "N reviews need replies"
 
 ## What's Next
 - Set up real Supabase project and fill in `.env.local` with real credentials
@@ -17,7 +28,7 @@
 - Set up Google Cloud project with Business Profile API + OAuth credentials
 - Set up Anthropic API key
 - Run the Supabase migration (`supabase/migrations/001_initial_schema.sql`)
-- Test end-to-end flow: signup → add business → connect Google → pull reviews → generate replies → post
+- Test end-to-end onboarding flow: signup → 3-step checklist → add business → auto-redirect → connect Google → auto-pull → generate replies → post
 - Deploy to Vercel
 
 ## Lessons Learned / Gotchas
