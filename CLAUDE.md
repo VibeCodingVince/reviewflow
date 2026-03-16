@@ -73,3 +73,26 @@ See `.env.example` for all required vars. `.env.local` exists with placeholders 
 - `npm run dev` — Start dev server
 - `npm run build` — Production build
 - `npm run lint` — ESLint
+
+---
+
+## Session Protocol — MANDATORY
+
+When the user types **"end session"**, you MUST do the following in order:
+
+1. **Update `CLAUDE.md`** — Add/update any new project context: new files, changed patterns, architectural decisions, current state of work, what was done this session, and what's next.
+2. **Update `shared-memory.md`** (at repo root) — This is the cross-machine shared memory file. Write everything Claude needs to know to resume work seamlessly on any machine: lessons learned, debugging insights, gotchas, user preferences, current progress, and next steps. This file IS the memory — it lives in the repo so it syncs across machines.
+3. **Commit and push both files to GitHub.**
+
+On any new machine/session, the user will say **"read shared-memory.md"** — that file must contain everything needed to pick up where we left off.
+
+### What goes in `shared-memory.md`:
+- Lessons learned and debugging gotchas (e.g. Stripe lazy init, Next.js prerender quirks)
+- Current project status and what was last worked on
+- What needs to be done next
+- User preferences and workflow notes
+- Any patterns or conventions established in this project
+
+### What goes in `CLAUDE.md`:
+- Project structure, tech stack, key patterns (the permanent reference doc)
+- Updated whenever the architecture or structure changes
