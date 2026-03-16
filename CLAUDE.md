@@ -50,11 +50,17 @@ supabase/migrations/     # SQL schema with RLS policies
 - **Onboarding flow:** signup → dashboard (3-step checklist) → add business → auto-redirect to business detail → Connect Google banner → OAuth → auto-pull reviews via `?connected=true` query param → generate replies
 - **Google OAuth callback** redirects to `/dashboard/{businessId}?connected=true` — business detail page auto-syncs reviews on that param
 - **`connectGoogle()` helper** exists in both `settings/page.tsx` and `[businessId]/page.tsx` (duplicated, ~5 lines each)
+- **Trial banner** in dashboard layout fetches user record and shows countdown banners (>3 days: info, ≤3 days: warning, expired: alert)
+- **Stripe webhook** stores `trial_end` from subscription on both `checkout.session.completed` and `customer.subscription.updated`; maps `trialing` status to `active`
 
 ## Database Tables
-- `users` — linked to auth.users, has stripe_customer_id, subscription_status/tier
+- `users` — linked to auth.users, has stripe_customer_id, subscription_status/tier, trial_end
 - `businesses` — belongs to user, has google_refresh_token, tone, auto_reply, custom instructions
 - `reviews` — belongs to business, has ai_reply, edited_reply, reply_status (pending/approved/posted/skipped/failed)
+
+## Migrations
+- `001_initial_schema.sql` — Base schema with users, businesses, reviews + RLS
+- `002_add_trial_end.sql` — Adds `trial_end` (timestamptz, nullable) to users table
 
 ## Design System
 - **Brand primary:** Dark green `#1B4332` (HSL: 153 46% 18%)

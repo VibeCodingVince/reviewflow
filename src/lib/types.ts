@@ -10,6 +10,7 @@ export interface User {
   stripe_customer_id: string | null;
   subscription_status: SubscriptionStatus;
   subscription_tier: SubscriptionTier | null;
+  trial_end: string | null;
   created_at: string;
   updated_at: string;
 }

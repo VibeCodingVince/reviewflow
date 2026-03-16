@@ -199,7 +199,13 @@ export default function SettingsPage() {
                       : "bg-gray-50 text-gray-600 border-gray-200"
                   }`}
                 >
-                  {user?.subscription_status}
+                  {user?.trial_end &&
+                  new Date(user.trial_end) > new Date()
+                    ? `Free Trial — ${Math.ceil(
+                        (new Date(user.trial_end).getTime() - Date.now()) /
+                          (1000 * 60 * 60 * 24)
+                      )} days remaining`
+                    : user?.subscription_status}
                 </Badge>
                 {user?.subscription_tier && (
                   <Badge

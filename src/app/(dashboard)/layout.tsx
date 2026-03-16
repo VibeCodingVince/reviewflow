@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   MessageSquareText,
@@ -9,15 +10,111 @@ import {
   Settings,
   LogOut,
   CreditCard,
+  Clock,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { User } from "@/lib/types";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/settings", label: "Settings", icon: Settings },
   { href: "/pricing", label: "Pricing", icon: CreditCard },
 ];
+
+function getTrialDaysLeft(trialEnd: string): number {
+  const now = new Date();
+  const end = new Date(trialEnd);
+  const diff = end.getTime() - now.getTime();
+  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+}
+
+function TrialBanner({ user }: { user: User }) {
+  if (!user.trial_end) return null;
+
+  const daysLeft = getTrialDaysLeft(user.trial_end);
+  const isExpired = daysLeft <= 0 && user.subscription_status !== "active";
+  const isUrgent = daysLeft <= 3 && daysLeft > 0;
+
+  // Don't show banner if trial_end exists but user has a paid (non-trial) subscription
+  // We detect active trial by having a future trial_end date
+  if (daysLeft <= 0 && user.subscription_status === "active") return null;
+
+  if (isExpired) {
+    return (
+      <div className="bg-red-50 border-b border-red-200">
+        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0" />
+            <p className="text-sm font-body text-red-800">
+              Your free trial has ended. Subscribe to continue using ReviewFlow.
+            </p>
+          </div>
+          <Link href="/pricing">
+            <Button
+              size="sm"
+              className="h-8 px-4 rounded-lg bg-primary text-white font-body text-xs hover:bg-primary/90"
+            >
+              Subscribe to continue
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (isUrgent) {
+    return (
+      <div className="bg-amber-50 border-b border-amber-200">
+        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4 text-amber-600 flex-shrink-0" />
+            <p className="text-sm font-body text-amber-800">
+              Your free trial ends in{" "}
+              <span className="font-semibold">
+                {daysLeft} {daysLeft === 1 ? "day" : "days"}
+              </span>
+              . Upgrade to keep your auto-replies running.
+            </p>
+          </div>
+          <Link href="/pricing">
+            <Button
+              size="sm"
+              className="h-8 px-4 rounded-lg bg-primary text-white font-body text-xs hover:bg-primary/90"
+            >
+              Upgrade now
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // > 3 days left — subtle info banner
+  return (
+    <div className="bg-emerald-50/60 border-b border-emerald-100">
+      <div className="max-w-7xl mx-auto px-6 py-2.5 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Clock className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+          <p className="text-sm font-body text-emerald-800">
+            You have{" "}
+            <span className="font-semibold">
+              {daysLeft} {daysLeft === 1 ? "day" : "days"}
+            </span>{" "}
+            left in your free trial.
+          </p>
+        </div>
+        <Link
+          href="/pricing"
+          className="text-sm font-body font-medium text-primary hover:underline"
+        >
+          Upgrade
+        </Link>
+      </div>
+    </div>
+  );
+}
 
 export default function DashboardLayout({
   children,
@@ -26,6 +123,25 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const supabase = createClient();
+  const [user, setUser] = useState<User | null>(null);
+
+  const fetchUser = useCallback(async () => {
+    const {
+      data: { user: authUser },
+    } = await supabase.auth.getUser();
+    if (authUser) {
+      const { data } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", authUser.id)
+        .single();
+      if (data) setUser(data);
+    }
+  }, [supabase]);
+
+  useEffect(() => {
+    fetchUser();
+  }, [fetchUser]);
 
   async function handleSignOut() {
     await supabase.auth.signOut();
@@ -75,8 +191,13 @@ export default function DashboardLayout({
         </div>
       </nav>
 
+      {/* Trial banner */}
+      <div className="pt-16">
+        {user && <TrialBanner user={user} />}
+      </div>
+
       {/* Content */}
-      <main className="pt-24 pb-12 max-w-7xl mx-auto px-6">{children}</main>
+      <main className="pb-12 max-w-7xl mx-auto px-6 pt-8">{children}</main>
     </div>
   );
 }

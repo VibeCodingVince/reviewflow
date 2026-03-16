@@ -36,6 +36,9 @@ export async function POST(request: Request) {
 
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
         const tier = subscription.metadata.tier || "single";
+        const trialEnd = subscription.trial_end
+          ? new Date(subscription.trial_end * 1000).toISOString()
+          : null;
 
         await supabase
           .from("users")
@@ -43,6 +46,7 @@ export async function POST(request: Request) {
             stripe_customer_id: customerId,
             subscription_status: "active",
             subscription_tier: tier,
+            trial_end: trialEnd,
           })
           .eq("stripe_customer_id", customerId);
 
@@ -64,11 +68,16 @@ export async function POST(request: Request) {
           status = "free";
         }
 
+        const trialEnd = subscription.trial_end
+          ? new Date(subscription.trial_end * 1000).toISOString()
+          : null;
+
         await supabase
           .from("users")
           .update({
             subscription_status: status,
             subscription_tier: subscription.metadata.tier || null,
+            trial_end: trialEnd,
           })
           .eq("stripe_customer_id", customerId);
 
