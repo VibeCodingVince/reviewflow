@@ -54,14 +54,14 @@ function ReviewDemo() {
             <Sparkles className="w-3.5 h-3.5 text-white" />
           </div>
           <span className="text-xs font-body font-medium text-primary uppercase tracking-wider">
-            AI-Generated Reply
+            Reply from [Your Business Name]
           </span>
         </div>
         <p className="text-sm text-foreground/80 font-body leading-relaxed">
           &ldquo;Sarah, so glad you loved the avocado toast — it&apos;s our
           chef&apos;s pride! Thank you for noticing our team&apos;s
-          attentiveness, we can&apos;t wait to welcome you back. — The
-          Green Table&rdquo;
+          attentiveness, we can&apos;t wait to welcome you back.
+          — [Your Business Name]&rdquo;
         </p>
         <div className="flex gap-2 mt-4">
           <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-body font-medium">

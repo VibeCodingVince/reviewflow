@@ -5,9 +5,9 @@
 ---
 
 ## Current Status
-- **Last updated:** 2026-03-16 (Windows session)
+- **Last updated:** 2026-03-16 (Mac session)
 - **Phase:** Initial build complete. All 5 phases done. Project compiles and builds successfully.
-- **Last session:** Built entire project from scratch — skills, project setup, database schema, 11 API routes, 7 frontend pages, polish. Pushed to GitHub. Set up "end session" protocol and shared-memory.md for cross-machine sync.
+- **Last session (Mac):** Cloned repo to Mac. Fixed hero section demo — changed AI reply sign-off from "The Green Table" to "[Your Business Name]" and label from "AI-GENERATED REPLY" to "Reply from [Your Business Name]" to make the demo more realistic. Set up local Claude memory on Mac.
 - **Repo:** https://github.com/VibeCodingVince/reviewflow
 - **Build status:** Clean — `npm run build` passes with no errors
 
