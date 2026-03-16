@@ -39,6 +39,7 @@
 - **Stripe API version:** Must match installed SDK version exactly (was `2026-02-25.clover` for current stripe package)
 - **Supabase SSR cookies:** Uses get/set/remove pattern — set/remove wrapped in try/catch for server components
 - **Git auth:** When gh CLI has multiple accounts, may need `gh auth setup-git` to fix push permissions
+- **Mac dev setup:** Homebrew and `gh` CLI installed on Mac (2026-03-16). `gh` lives at `/opt/homebrew/bin/gh` — shell may need restart or path update if `gh` isn't found
 
 ## User Preferences
 - Prefers comprehensive, full builds over incremental
