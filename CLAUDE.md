@@ -31,6 +31,7 @@ src/
 ├── hooks/               # use-toast
 ├── lib/
 │   ├── supabase/        # client.ts, server.ts, admin.ts
+│   ├── subscription.ts  # isSubscriptionActive(), requireActiveSubscription() helpers
 │   ├── stripe.ts        # Lazy-initialized Stripe client (getStripe())
 │   ├── google.ts        # Google Business Profile API helpers
 │   ├── types.ts         # TypeScript types for DB entities
@@ -44,7 +45,7 @@ supabase/migrations/     # SQL schema with RLS policies
 - **Stripe client** is lazy-initialized via `getStripe()` (not top-level) to avoid build errors when env vars are missing
 - **Supabase SSR** uses `@supabase/ssr` with cookie-based auth — three clients: browser (`client.ts`), server component (`server.ts`), admin/service role (`admin.ts`)
 - **RLS policies** enforce that users can only access their own data; reviews are accessed through business ownership
-- **API routes** all follow try/catch pattern with auth check via `supabase.auth.getUser()`
+- **API routes** all follow try/catch pattern with auth check via `supabase.auth.getUser()`, then subscription gate via `requireActiveSubscription()` for paid features
 - **Client pages** use "use client" directive and fetch data in useEffect with useCallback
 - **Middleware** redirects unauthenticated users to /login and authenticated users away from auth pages
 - **Onboarding flow:** signup → dashboard (3-step checklist) → add business → auto-redirect to business detail → Connect Google banner → OAuth → auto-pull reviews via `?connected=true` query param → generate replies
@@ -52,6 +53,7 @@ supabase/migrations/     # SQL schema with RLS policies
 - **`connectGoogle()` helper** exists in both `settings/page.tsx` and `[businessId]/page.tsx` (duplicated, ~5 lines each)
 - **Trial banner** in dashboard layout fetches user record and shows countdown banners (>3 days: info, ≤3 days: warning, expired: alert)
 - **Stripe webhook** stores `trial_end` from subscription on both `checkout.session.completed` and `customer.subscription.updated`; maps `trialing` status to `active`
+- **Subscription gate** (`src/lib/subscription.ts`): `isSubscriptionActive()` checks status=active/free OR valid trial; `requireActiveSubscription()` is async DB-check helper returning 403 with `SUBSCRIPTION_REQUIRED` code. Applied to 5 paid routes (generate-reply, generate-bulk, post-reply, pull, import-csv). `update-status` is intentionally ungated. Cron job uses `isSubscriptionActive()` to also honor trials.
 
 ## Database Tables
 - `users` — linked to auth.users, has stripe_customer_id, subscription_status/tier, trial_end

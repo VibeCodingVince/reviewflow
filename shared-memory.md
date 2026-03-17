@@ -6,31 +6,30 @@
 
 ## Current Status
 - **Last updated:** 2026-03-16 (Mac session)
-- **Phase:** Initial build complete + self-serve onboarding + trial countdown banner
-- **Last session:** Added trial countdown banner to dashboard — `trial_end` column, Stripe webhook integration, 3-tier banner (info/warning/alert), settings page trial display
+- **Phase:** Initial build complete + self-serve onboarding + trial banner + subscription gate
+- **Last session:** Implemented subscription gate for all paid API routes
 - **Repo:** https://github.com/VibeCodingVince/reviewflow
 - **Build status:** Clean TypeScript (`tsc --noEmit` passes) — pre-existing static export warnings for pages needing env vars remain
 
 ### What was done this session
-1. **Database migration (`002_add_trial_end.sql`):** Added `trial_end` (timestamptz, nullable) to `users` table
-2. **Types (`types.ts`):** Added `trial_end: string | null` to User interface
-3. **Stripe webhook (`webhook/route.ts`):** Both `checkout.session.completed` and `customer.subscription.updated` now extract `trial_end` from the Stripe subscription and store it. `trialing` status already mapped to `active`.
-4. **Dashboard layout (`layout.tsx`):** Added `TrialBanner` component that fetches user record and shows:
-   - >3 days left: subtle emerald info banner + "Upgrade" link
-   - ≤3 days left: amber warning banner + "Upgrade now" CTA
-   - Expired (non-active): red alert banner + "Subscribe to continue" CTA
-   - Paid/no trial: no banner
-5. **Settings page (`settings/page.tsx`):** Subscription badge shows "Free Trial — X days remaining" when on active trial
+1. **Created `src/lib/subscription.ts`** — two helpers:
+   - `isSubscriptionActive(user)`: pure function, returns true if status is `active`/`free` OR `trial_end` is in the future
+   - `requireActiveSubscription(supabase, userId)`: async helper that fetches user from DB, checks subscription, returns `{ user }` or `{ error: NextResponse(403) }` with `SUBSCRIPTION_REQUIRED` code
+2. **Gated 5 paid API routes** with `requireActiveSubscription()` (2 lines after auth check):
+   - `generate-reply`, `generate-bulk`, `post-reply`, `pull`, `import-csv`
+3. **Left `update-status` ungated** — housekeeping action, expired users should still manage data
+4. **Fixed cron job** (`check-reviews/route.ts`) — replaced partial status-only check with `isSubscriptionActive()` so trials are honored
 
 ### What was discussed for next steps
 Prioritized list of remaining code-level fixes before going live:
 1. **Tier passthrough in Stripe checkout** — checkout flow needs to pass selected tier (single/multi) through to Stripe metadata so webhook stores it correctly
 2. **Trial start timing** — Ensure `subscription_data.trial_period_days: 7` is set in Stripe Checkout session creation
-3. **Subscription gate** — No enforcement yet that free/expired users can't use paid features (generate replies, post replies, etc.)
+3. ~~**Subscription gate**~~ — **DONE** this session
 4. **CSV import validation** — import-csv endpoint needs better error handling for production
 5. **Duplicate `connectGoogle()` helper** — Extract from settings + business detail into shared util
 6. **Error boundaries** — Dashboard pages have none; failed fetch crashes the page
 7. **Loading states on layout** — Trial banner flashes in after user data loads
+8. **Frontend subscription gate UX** — Handle `SUBSCRIPTION_REQUIRED` 403 responses in the UI (show upgrade prompt instead of generic error)
 
 ### Infrastructure setup still needed
 - Set up real Supabase project and fill in `.env.local` with real credentials

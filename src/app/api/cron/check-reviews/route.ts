@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isSubscriptionActive } from "@/lib/subscription";
 import { getAccessToken, fetchGoogleReviews, postGoogleReply, mapStarRating } from "@/lib/google";
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
@@ -34,10 +35,7 @@ export async function GET(request: Request) {
     for (const business of businesses) {
       try {
         // Only process businesses with active subscriptions
-        if (
-          business.users.subscription_status !== "active" &&
-          business.users.subscription_status !== "free"
-        ) {
+        if (!isSubscriptionActive(business.users)) {
           continue;
         }
 

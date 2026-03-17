@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { requireActiveSubscription } from "@/lib/subscription";
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 
@@ -14,6 +15,9 @@ export async function POST(request: Request) {
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const subCheck = await requireActiveSubscription(supabase, user.id);
+    if ('error' in subCheck) return subCheck.error;
 
     const { review_id } = await request.json();
     if (!review_id) {
