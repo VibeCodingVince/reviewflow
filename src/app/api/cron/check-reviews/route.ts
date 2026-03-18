@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isSubscriptionActive } from "@/lib/subscription";
 import { getAccessToken, fetchGoogleReviews, postGoogleReply, mapStarRating } from "@/lib/google";
+import { analyzeSpam } from "@/lib/spam-analysis";
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 
@@ -46,21 +47,62 @@ export async function GET(request: Request) {
           business.google_account_id!
         );
 
+        const newReviewIds: string[] = [];
         let newReviews = 0;
         for (const review of googleReviews) {
-          const { error: insertError } = await supabase.from("reviews").upsert(
-            {
-              business_id: business.id,
-              google_review_id: review.reviewId,
-              reviewer_name: review.reviewer.displayName,
-              rating: mapStarRating(review.starRating),
-              review_text: review.comment || "",
-              review_date: review.createTime,
-              reply_status: "pending",
-            },
-            { onConflict: "google_review_id", ignoreDuplicates: true }
-          );
-          if (!insertError) newReviews++;
+          const { data: inserted, error: insertError } = await supabase
+            .from("reviews")
+            .upsert(
+              {
+                business_id: business.id,
+                google_review_id: review.reviewId,
+                reviewer_name: review.reviewer.displayName,
+                rating: mapStarRating(review.starRating),
+                review_text: review.comment || "",
+                review_date: review.createTime,
+                reply_status: "pending",
+              },
+              { onConflict: "google_review_id", ignoreDuplicates: true }
+            )
+            .select("id");
+          if (!insertError && inserted && inserted.length > 0) {
+            newReviews++;
+            newReviewIds.push(inserted[0].id);
+          }
+        }
+
+        // Review Shield: Analyze new reviews for spam (if enabled and Pro tier)
+        let spamFlagged = 0;
+        if (business.review_shield_enabled && business.users.subscription_tier === "pro") {
+          const { data: recentReviews } = await supabase
+            .from("reviews")
+            .select("reviewer_name, rating, review_text, review_date")
+            .eq("business_id", business.id)
+            .order("review_date", { ascending: false })
+            .limit(20);
+
+          for (const reviewId of newReviewIds) {
+            const { data: review } = await supabase
+              .from("reviews")
+              .select("*")
+              .eq("id", reviewId)
+              .single();
+
+            if (review) {
+              await new Promise((resolve) => setTimeout(resolve, 200));
+              const spamResult = await analyzeSpam(review, business, recentReviews || []);
+              await supabase
+                .from("reviews")
+                .update({
+                  spam_score: spamResult.spam_score,
+                  spam_reasons: spamResult.spam_reasons,
+                  is_suspicious: spamResult.spam_score >= 0.7,
+                })
+                .eq("id", reviewId);
+
+              if (spamResult.spam_score >= 0.7) spamFlagged++;
+            }
+          }
         }
 
         // Generate and post replies for pending reviews
@@ -152,6 +194,7 @@ Rules:
           newReviews,
           repliesGenerated,
           repliesPosted,
+          spamFlagged,
         });
       } catch (err) {
         console.error(`Cron: Failed for business ${business.id}:`, err);

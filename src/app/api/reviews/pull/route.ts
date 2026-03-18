@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireActiveSubscription } from "@/lib/subscription";
 import { getAccessToken, fetchGoogleReviews, mapStarRating } from "@/lib/google";
+import { analyzeSpam } from "@/lib/spam-analysis";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -48,27 +49,65 @@ export async function POST(request: Request) {
     );
 
     // Deduplicate and insert new reviews
+    const newReviewIds: string[] = [];
     let newCount = 0;
     for (const review of googleReviews) {
-      const { error: insertError } = await supabase.from("reviews").upsert(
-        {
-          business_id,
-          google_review_id: review.reviewId,
-          reviewer_name: review.reviewer.displayName,
-          rating: mapStarRating(review.starRating),
-          review_text: review.comment || "",
-          review_date: review.createTime,
-          reply_status: "pending",
-        },
-        { onConflict: "google_review_id", ignoreDuplicates: true }
-      );
+      const { data: inserted, error: insertError } = await supabase
+        .from("reviews")
+        .upsert(
+          {
+            business_id,
+            google_review_id: review.reviewId,
+            reviewer_name: review.reviewer.displayName,
+            rating: mapStarRating(review.starRating),
+            review_text: review.comment || "",
+            review_date: review.createTime,
+            reply_status: "pending",
+          },
+          { onConflict: "google_review_id", ignoreDuplicates: true }
+        )
+        .select("id");
 
-      if (!insertError) {
+      if (!insertError && inserted && inserted.length > 0) {
         newCount++;
+        newReviewIds.push(inserted[0].id);
       }
     }
 
-    return NextResponse.json({ new_reviews: newCount });
+    // Review Shield: Analyze new reviews for spam (if shield is enabled and user is Pro)
+    let spamFlagged = 0;
+    if (business.review_shield_enabled && subCheck.user.subscription_tier === "pro" && newReviewIds.length > 0) {
+      const { data: recentReviews } = await supabase
+        .from("reviews")
+        .select("reviewer_name, rating, review_text, review_date")
+        .eq("business_id", business_id)
+        .order("review_date", { ascending: false })
+        .limit(20);
+
+      for (const reviewId of newReviewIds) {
+        const { data: review } = await supabase
+          .from("reviews")
+          .select("*")
+          .eq("id", reviewId)
+          .single();
+
+        if (review) {
+          const spamResult = await analyzeSpam(review, business, recentReviews || []);
+          await supabase
+            .from("reviews")
+            .update({
+              spam_score: spamResult.spam_score,
+              spam_reasons: spamResult.spam_reasons,
+              is_suspicious: spamResult.spam_score >= 0.7,
+            })
+            .eq("id", reviewId);
+
+          if (spamResult.spam_score >= 0.7) spamFlagged++;
+        }
+      }
+    }
+
+    return NextResponse.json({ new_reviews: newCount, spam_flagged: spamFlagged });
   } catch (error) {
     console.error("Pull reviews error:", error);
     return NextResponse.json(

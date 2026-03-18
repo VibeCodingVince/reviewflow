@@ -165,7 +165,7 @@ export default function PricingPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             <PricingCard
               name="Single"
               price="$29"
@@ -185,13 +185,29 @@ export default function PricingPage() {
               price="$79"
               description="For growing businesses"
               tier="multi"
-              popular
               features={[
                 "Up to 5 Google Business locations",
                 "Unlimited AI-generated replies",
                 "Custom instructions per location",
                 "Auto-reply or manual approval",
                 "CSV review import",
+                "Priority support",
+              ]}
+            />
+            <PricingCard
+              name="Pro"
+              price="$149"
+              description="Full GBP management suite"
+              tier="pro"
+              popular
+              features={[
+                "Up to 5 locations",
+                "Everything in Multi, plus:",
+                "Review Shield — AI spam detection",
+                "Early-Warning Radar — performance alerts",
+                "Action Planner — weekly AI tasks",
+                "Auto-publish GBP posts",
+                "Health score & trend analytics",
                 "Priority support",
               ]}
             />
@@ -213,8 +229,12 @@ export default function PricingPage() {
                   a: "Absolutely. Upgrade, downgrade, or cancel anytime from your billing portal. Changes take effect immediately.",
                 },
                 {
+                  q: "What's included in the Pro plan?",
+                  a: "Pro gives you three AI-powered agents: Review Shield scans every review for spam and generates flag appeals, Early-Warning Radar monitors your GBP performance daily and alerts you to drops, and Action Planner generates weekly optimization tasks with ready-to-publish post drafts.",
+                },
+                {
                   q: "Do you need access to my Google account?",
-                  a: "We request limited OAuth access to read your reviews and post replies. We never access anything else on your Google account.",
+                  a: "We request limited OAuth access to read your reviews, post replies, monitor performance, and publish posts. We never access anything else on your Google account.",
                 },
                 {
                   q: "What if I don't like a generated reply?",

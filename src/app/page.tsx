@@ -8,6 +8,9 @@ import {
   Check,
   Sparkles,
   Zap,
+  Shield,
+  Activity,
+  CalendarCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -287,6 +290,27 @@ export default function LandingPage() {
                   "Manage reviews across all your locations from one dashboard. Each location gets its own voice and settings.",
                 gradient: "from-blue-500 to-indigo-600",
               },
+              {
+                icon: Shield,
+                title: "Review Shield",
+                description:
+                  "AI detects fake and spam reviews instantly. Get suspicious review scores, reasons, and auto-generated appeal narratives to flag them to Google.",
+                gradient: "from-red-500 to-rose-600",
+              },
+              {
+                icon: Activity,
+                title: "Early-Warning Radar",
+                description:
+                  "Daily performance monitoring catches drops before they hurt. AI alerts explain what happened and recommend next steps.",
+                gradient: "from-violet-500 to-purple-600",
+              },
+              {
+                icon: CalendarCheck,
+                title: "Action Planner",
+                description:
+                  "Weekly AI-generated tasks optimize your profile — draft posts, update services, improve descriptions. Approve and auto-publish.",
+                gradient: "from-cyan-500 to-teal-600",
+              },
             ].map((feature) => (
               <div
                 key={feature.title}
@@ -431,7 +455,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             <PricingCard
               name="Single"
               price="$29"
@@ -451,13 +475,29 @@ export default function LandingPage() {
               price="$79"
               description="For growing businesses"
               tier="multi"
-              popular
               features={[
                 "Up to 5 Google Business locations",
                 "Unlimited AI-generated replies",
                 "Custom instructions per location",
                 "Auto-reply or manual approval",
                 "CSV review import",
+                "Priority support",
+              ]}
+            />
+            <PricingCard
+              name="Pro"
+              price="$149"
+              description="Full GBP management suite"
+              tier="pro"
+              popular
+              features={[
+                "Up to 5 locations",
+                "Everything in Multi, plus:",
+                "Review Shield — AI spam detection",
+                "Early-Warning Radar — performance alerts",
+                "Action Planner — weekly AI tasks",
+                "Auto-publish GBP posts",
+                "Health score & trend analytics",
                 "Priority support",
               ]}
             />

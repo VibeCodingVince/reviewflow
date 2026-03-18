@@ -12,6 +12,9 @@ import {
   CreditCard,
   Clock,
   AlertTriangle,
+  Activity,
+  CalendarCheck,
+  Bell,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -19,6 +22,8 @@ import type { User } from "@/lib/types";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/radar", label: "Radar", icon: Activity, pro: true },
+  { href: "/planner", label: "Planner", icon: CalendarCheck, pro: true },
   { href: "/settings", label: "Settings", icon: Settings },
   { href: "/pricing", label: "Pricing", icon: CreditCard },
 ];
@@ -38,7 +43,6 @@ function TrialBanner({ user }: { user: User }) {
   const isUrgent = daysLeft <= 3 && daysLeft > 0;
 
   // Don't show banner if trial_end exists but user has a paid (non-trial) subscription
-  // We detect active trial by having a future trial_end date
   if (daysLeft <= 0 && user.subscription_status === "active") return null;
 
   if (isExpired) {
@@ -124,6 +128,7 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const supabase = createClient();
   const [user, setUser] = useState<User | null>(null);
+  const [unreadAlerts, setUnreadAlerts] = useState(0);
 
   const fetchUser = useCallback(async () => {
     const {
@@ -139,14 +144,34 @@ export default function DashboardLayout({
     }
   }, [supabase]);
 
+  const fetchUnreadAlerts = useCallback(async () => {
+    if (!user || user.subscription_tier !== "pro") return;
+
+    try {
+      const res = await fetch("/api/alerts?unread=true");
+      if (res.ok) {
+        const data = await res.json();
+        setUnreadAlerts((data.alerts || []).filter((a: { is_read: boolean }) => !a.is_read).length);
+      }
+    } catch {
+      // silently ignore
+    }
+  }, [user]);
+
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
+
+  useEffect(() => {
+    fetchUnreadAlerts();
+  }, [fetchUnreadAlerts]);
 
   async function handleSignOut() {
     await supabase.auth.signOut();
     window.location.href = "/";
   }
+
+  const isPro = user?.subscription_tier === "pro";
 
   return (
     <div className="min-h-screen bg-gray-50/50">
@@ -163,22 +188,52 @@ export default function DashboardLayout({
           </Link>
 
           <div className="flex items-center gap-1">
-            {navItems.map((item) => (
-              <Link key={item.href} href={item.href}>
+            {navItems.map((item) => {
+              // Hide pro-only nav items for non-pro users (still show but greyed)
+              const isProItem = "pro" in item && item.pro;
+
+              return (
+                <Link key={item.href} href={isProItem && !isPro ? "/pricing" : item.href}>
+                  <Button
+                    variant="ghost"
+                    className={cn(
+                      "h-9 px-4 rounded-lg font-body text-sm",
+                      pathname === item.href || pathname.startsWith(item.href + "/")
+                        ? "bg-primary/5 text-primary"
+                        : isProItem && !isPro
+                          ? "text-muted-foreground/50 hover:text-muted-foreground"
+                          : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <item.icon className="w-4 h-4 mr-2" />
+                    {item.label}
+                    {isProItem && !isPro && (
+                      <span className="ml-1.5 text-[9px] font-semibold uppercase tracking-wider bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">
+                        Pro
+                      </span>
+                    )}
+                  </Button>
+                </Link>
+              );
+            })}
+
+            {/* Alert bell for Pro users */}
+            {isPro && (
+              <Link href="/radar">
                 <Button
                   variant="ghost"
-                  className={cn(
-                    "h-9 px-4 rounded-lg font-body text-sm",
-                    pathname === item.href || pathname.startsWith(item.href + "/")
-                      ? "bg-primary/5 text-primary"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
+                  className="h-9 w-9 p-0 rounded-lg relative"
                 >
-                  <item.icon className="w-4 h-4 mr-2" />
-                  {item.label}
+                  <Bell className="w-4 h-4 text-muted-foreground" />
+                  {unreadAlerts > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                      {unreadAlerts > 9 ? "9+" : unreadAlerts}
+                    </span>
+                  )}
                 </Button>
               </Link>
-            ))}
+            )}
+
             <Button
               variant="ghost"
               className="h-9 px-4 rounded-lg font-body text-sm text-muted-foreground hover:text-foreground"

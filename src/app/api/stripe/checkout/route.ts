@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     }
 
     const { tier } = await request.json();
-    if (!tier || !["single", "multi"].includes(tier)) {
+    if (!tier || !["single", "multi", "pro"].includes(tier)) {
       return NextResponse.json({ error: "Invalid tier" }, { status: 400 });
     }
 
@@ -42,7 +42,9 @@ export async function POST(request: Request) {
     const priceId =
       tier === "single"
         ? process.env.STRIPE_PRICE_SINGLE!
-        : process.env.STRIPE_PRICE_MULTI!;
+        : tier === "pro"
+          ? process.env.STRIPE_PRICE_PRO!
+          : process.env.STRIPE_PRICE_MULTI!;
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,

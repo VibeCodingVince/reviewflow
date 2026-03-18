@@ -1,7 +1,7 @@
-# ReviewFlow — AI-Powered Google Review Responder SaaS
+# ReviewFlow — AI-Powered GBP Management Platform
 
 ## Project Overview
-A full-stack SaaS app that auto-generates and posts replies to Google Business reviews using Claude AI. Built with Next.js 14 (App Router), Supabase, Stripe, and the Anthropic SDK.
+A full-stack SaaS app that manages Google Business Profiles with AI. Started as a review auto-responder, now expanded to a full GBP management platform with 3 AI agent features. Built with Next.js 14 (App Router), Supabase, Stripe, and the Anthropic SDK.
 
 **Repo:** https://github.com/VibeCodingVince/reviewflow
 
@@ -10,7 +10,7 @@ A full-stack SaaS app that auto-generates and posts replies to Google Business r
 - **Styling:** Tailwind CSS + shadcn/ui components
 - **Database & Auth:** Supabase (PostgreSQL + Auth + RLS)
 - **Payments:** Stripe (Checkout, Webhooks, Customer Portal)
-- **AI:** Anthropic Claude (claude-sonnet-4-20250514) for reply generation
+- **AI:** Anthropic Claude (claude-sonnet-4-20250514) for reply generation, spam analysis, alerts, and task generation
 - **Fonts:** DM Serif Display (headings) + Outfit (body) via Google Fonts
 - **Icons:** lucide-react
 
@@ -18,34 +18,44 @@ A full-stack SaaS app that auto-generates and posts replies to Google Business r
 ```
 src/
 ├── app/
-│   ├── (auth)/          # Login, Signup pages (client components)
-│   ├── (dashboard)/     # Dashboard, Business Reviews, Settings (client components)
+│   ├── (auth)/              # Login, Signup pages (client components)
+│   ├── (dashboard)/
+│   │   ├── dashboard/       # Main dashboard + [businessId] detail page
+│   │   ├── radar/           # Early-Warning Radar page (Pro)
+│   │   ├── planner/         # Action Planner + posts subpage (Pro)
+│   │   ├── settings/        # Settings with Pro feature toggles
+│   │   └── layout.tsx       # Dashboard layout with nav, trial banner, alert bell
 │   ├── api/
-│   │   ├── auth/        # Supabase + Google OAuth callbacks
-│   │   ├── reviews/     # pull, generate-reply, generate-bulk, post-reply, update-status, import-csv
-│   │   ├── stripe/      # checkout, webhook, portal
-│   │   └── cron/        # check-reviews (auto-reply cron job)
-│   ├── pricing/         # Pricing page
-│   └── page.tsx         # Landing page
-├── components/ui/       # shadcn/ui components
-├── hooks/               # use-toast
+│   │   ├── auth/            # Supabase + Google OAuth callbacks
+│   │   ├── reviews/         # pull, generate-reply, generate-bulk, post-reply, update-status, import-csv, analyze-spam, generate-flag-narrative
+│   │   ├── stripe/          # checkout, webhook, portal
+│   │   ├── cron/            # check-reviews, check-performance, generate-tasks, publish-posts
+│   │   ├── alerts/          # GET/PATCH alerts (Radar)
+│   │   ├── performance/     # GET performance snapshots (Radar)
+│   │   ├── tasks/           # GET/PATCH optimization tasks (Planner)
+│   │   └── posts/           # GET posts, POST publish (Planner)
+│   ├── pricing/             # Pricing page (3 tiers: Single, Multi, Pro)
+│   └── page.tsx             # Landing page
+├── components/ui/           # shadcn/ui components
+├── hooks/                   # use-toast
 ├── lib/
-│   ├── supabase/        # client.ts, server.ts, admin.ts
-│   ├── subscription.ts  # isSubscriptionActive(), requireActiveSubscription() helpers
-│   ├── stripe.ts        # Lazy-initialized Stripe client (getStripe())
-│   ├── google.ts        # Google Business Profile API helpers
-│   ├── types.ts         # TypeScript types for DB entities
-│   └── utils.ts         # cn() utility
-├── middleware.ts         # Auth protection for /dashboard, /settings
-skills/                  # Design and architecture skill files
-supabase/migrations/     # SQL schema with RLS policies
+│   ├── supabase/            # client.ts, server.ts, admin.ts
+│   ├── subscription.ts      # isSubscriptionActive(), requireActiveSubscription(), requireFeatureAccess()
+│   ├── spam-analysis.ts     # analyzeSpam() — Claude-powered spam detection (shared by routes + cron)
+│   ├── stripe.ts            # Lazy-initialized Stripe client (getStripe())
+│   ├── google.ts            # Google Business Profile API helpers (reviews, performance, posts)
+│   ├── types.ts             # TypeScript types for all DB entities
+│   └── utils.ts             # cn() utility
+├── middleware.ts             # Auth protection for /dashboard, /settings
+skills/                      # Design and architecture skill files
+supabase/migrations/         # SQL schema with RLS policies (001-006)
 ```
 
 ## Key Patterns
 - **Stripe client** is lazy-initialized via `getStripe()` (not top-level) to avoid build errors when env vars are missing
 - **Supabase SSR** uses `@supabase/ssr` with cookie-based auth — three clients: browser (`client.ts`), server component (`server.ts`), admin/service role (`admin.ts`)
-- **RLS policies** enforce that users can only access their own data; reviews are accessed through business ownership
-- **API routes** all follow try/catch pattern with auth check via `supabase.auth.getUser()`, then subscription gate via `requireActiveSubscription()` for paid features
+- **RLS policies** enforce that users can only access their own data; reviews/alerts/tasks/posts are accessed through business ownership
+- **API routes** all follow try/catch pattern with auth check via `supabase.auth.getUser()`, then subscription gate via `requireActiveSubscription()` for paid features, or `requireFeatureAccess()` for Pro-only features
 - **Client pages** use "use client" directive and fetch data in useEffect with useCallback
 - **Middleware** redirects unauthenticated users to /login and authenticated users away from auth pages
 - **Onboarding flow:** signup → dashboard (3-step checklist) → add business → auto-redirect to business detail → Connect Google banner → OAuth → auto-pull reviews via `?connected=true` query param → generate replies
@@ -54,15 +64,54 @@ supabase/migrations/     # SQL schema with RLS policies
 - **Trial banner** in dashboard layout fetches user record and shows countdown banners (>3 days: info, ≤3 days: warning, expired: alert)
 - **Stripe webhook** stores `trial_end` from subscription on both `checkout.session.completed` and `customer.subscription.updated`; maps `trialing` status to `active`
 - **Subscription gate** (`src/lib/subscription.ts`): `isSubscriptionActive()` checks status=active/free OR valid trial; `requireActiveSubscription()` is async DB-check helper returning 403 with `SUBSCRIPTION_REQUIRED` code. Applied to 5 paid routes (generate-reply, generate-bulk, post-reply, pull, import-csv). `update-status` is intentionally ungated. Cron job uses `isSubscriptionActive()` to also honor trials.
+- **Feature gate** (`requireFeatureAccess()`): checks subscription is active AND tier='pro'. Returns 403 with `FEATURE_REQUIRED` code. Applied to all new Pro routes (analyze-spam, generate-flag-narrative, alerts, performance, tasks, posts).
+- **Shared spam analysis** (`src/lib/spam-analysis.ts`): Extracted from route file because Next.js route files can only export HTTP handlers. Used by analyze-spam route, cron/check-reviews, and reviews/pull.
+- **Cron pattern**: All crons use CRON_SECRET bearer auth, createAdminClient(), isSubscriptionActive() + tier check per business, 200ms rate limiting.
 
 ## Database Tables
-- `users` — linked to auth.users, has stripe_customer_id, subscription_status/tier, trial_end
-- `businesses` — belongs to user, has google_refresh_token, tone, auto_reply, custom instructions
-- `reviews` — belongs to business, has ai_reply, edited_reply, reply_status (pending/approved/posted/skipped/failed)
+- `users` — linked to auth.users, has stripe_customer_id, subscription_status/tier (single/multi/pro), trial_end
+- `businesses` — belongs to user, has google_refresh_token, tone, auto_reply, custom instructions, review_shield_enabled, radar_enabled, action_planner_enabled, health_score
+- `reviews` — belongs to business, has ai_reply, edited_reply, reply_status, spam_score, spam_reasons, is_suspicious, flag_status, flag_narrative, flagged_at
+- `performance_snapshots` — daily metrics per business (clicks, calls, directions, bookings, impressions). Unique on (business_id, snapshot_date)
+- `alerts` — AI-generated alerts with type, severity, title, description, recommendations, metric deltas, read/dismissed state
+- `optimization_tasks` — weekly AI tasks with type, priority, title, description, ai_draft, status, impact_note, week_of
+- `gbp_posts` — published posts tracking with google_post_id, post_type, summary, CTA, status, views, clicks
 
 ## Migrations
 - `001_initial_schema.sql` — Base schema with users, businesses, reviews + RLS
 - `002_add_trial_end.sql` — Adds `trial_end` (timestamptz, nullable) to users table
+- `003_review_shield.sql` — Spam columns on reviews + shield toggle on businesses
+- `004_radar.sql` — performance_snapshots + alerts tables + RLS + radar_enabled/health_score on businesses
+- `005_action_planner.sql` — optimization_tasks + gbp_posts tables + RLS + action_planner_enabled on businesses
+- `006_pro_tier.sql` — Adds 'pro' to subscription_tier constraint
+
+## 3 AI Agent Features (Pro Tier)
+
+### 1. Review Shield — Fake Review Detection
+- AI analyzes reviews for spam patterns, scores 0.0–1.0, flags ≥0.7
+- Generates policy-aligned flag/appeal narratives for Google reporting
+- Runs automatically in cron + on-demand pulls (when shield enabled)
+- Dashboard: Shield tab on business detail page shows suspicious reviews with scores, reasons, flag status
+
+### 2. Early-Warning Radar — Performance Monitoring
+- Daily cron pulls GBP Performance API metrics
+- Detects anomalies (>20% drops) and generates AI-powered alerts
+- Computes health score (0–100) per business
+- Dashboard: /radar page with health score, metric cards, trend chart, alert feed
+
+### 3. GBP Action Planner — Weekly AI Optimization
+- Weekly cron audits profile and generates 3–5 prioritized tasks
+- AI drafts GBP posts, service descriptions, profile updates
+- Auto-publishes approved posts via Google LocalPosts API
+- Dashboard: /planner page with task checklist, /planner/posts for published posts grid
+
+## Cron Schedule
+| Job | Route | Frequency |
+|---|---|---|
+| check-reviews | `/api/cron/check-reviews` | Every 30 min |
+| check-performance | `/api/cron/check-performance` | Daily 2 AM |
+| generate-tasks | `/api/cron/generate-tasks` | Weekly Monday 6 AM |
+| publish-posts | `/api/cron/publish-posts` | Every 6 hours |
 
 ## Design System
 - **Brand primary:** Dark green `#1B4332` (HSL: 153 46% 18%)
@@ -73,12 +122,14 @@ supabase/migrations/     # SQL schema with RLS policies
 - Follow `skills/saas-architecture/SKILL.md` for all backend work
 
 ## Pricing Tiers
-- Single: $29/mo — 1 location
-- Multi: $79/mo — up to 5 locations
+- Single: $29/mo — 1 location, review replies only
+- Multi: $79/mo — up to 5 locations, review replies only
+- **Pro: $149/mo — up to 5 locations, review replies + Shield + Radar + Planner**
 - 7-day free trial, no card required
 
 ## Environment Variables
 See `.env.example` for all required vars. `.env.local` exists with placeholders for local dev (gitignored).
+New env var needed: `STRIPE_PRICE_PRO` for Pro tier Stripe price ID.
 
 ## Commands
 - `npm run dev` — Start dev server

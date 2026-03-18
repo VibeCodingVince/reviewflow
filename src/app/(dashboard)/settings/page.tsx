@@ -27,7 +27,12 @@ import {
   Loader2,
   Building2,
   AlertTriangle,
+  Shield,
+  Activity,
+  CalendarCheck,
+  Crown,
 } from "lucide-react";
+import Link from "next/link";
 import type { User, Business } from "@/lib/types";
 
 export default function SettingsPage() {
@@ -64,6 +69,8 @@ export default function SettingsPage() {
     fetchData();
   }, [fetchData]);
 
+  const isPro = user?.subscription_tier === "pro";
+
   async function saveBusiness(business: Business) {
     setSavingBusiness(business.id);
 
@@ -75,6 +82,9 @@ export default function SettingsPage() {
         tone: business.tone,
         auto_reply: business.auto_reply,
         review_reply_instructions: business.review_reply_instructions,
+        review_shield_enabled: business.review_shield_enabled,
+        radar_enabled: business.radar_enabled,
+        action_planner_enabled: business.action_planner_enabled,
       })
       .eq("id", business.id);
 
@@ -148,6 +158,14 @@ export default function SettingsPage() {
     window.location.href = url;
   }
 
+  function updateBusiness(businessId: string, updates: Partial<Business>) {
+    setBusinesses((prev) =>
+      prev.map((b) =>
+        b.id === businessId ? { ...b, ...updates } : b
+      )
+    );
+  }
+
   if (loading) {
     return (
       <div className="space-y-6 max-w-3xl">
@@ -210,8 +228,13 @@ export default function SettingsPage() {
                 {user?.subscription_tier && (
                   <Badge
                     variant="outline"
-                    className="capitalize rounded-full text-xs font-body"
+                    className={`capitalize rounded-full text-xs font-body ${
+                      user.subscription_tier === "pro"
+                        ? "bg-primary/10 text-primary border-primary/20"
+                        : ""
+                    }`}
                   >
+                    {user.subscription_tier === "pro" && <Crown className="w-3 h-3 mr-1" />}
                     {user.subscription_tier} plan
                   </Badge>
                 )}
@@ -270,13 +293,7 @@ export default function SettingsPage() {
                   <Input
                     value={business.business_name}
                     onChange={(e) =>
-                      setBusinesses((prev) =>
-                        prev.map((b) =>
-                          b.id === business.id
-                            ? { ...b, business_name: e.target.value }
-                            : b
-                        )
-                      )
+                      updateBusiness(business.id, { business_name: e.target.value })
                     }
                     className="h-10 rounded-lg font-body text-sm"
                   />
@@ -286,13 +303,7 @@ export default function SettingsPage() {
                   <Input
                     value={business.business_type}
                     onChange={(e) =>
-                      setBusinesses((prev) =>
-                        prev.map((b) =>
-                          b.id === business.id
-                            ? { ...b, business_type: e.target.value }
-                            : b
-                        )
-                      )
+                      updateBusiness(business.id, { business_type: e.target.value })
                     }
                     className="h-10 rounded-lg font-body text-sm"
                   />
@@ -305,11 +316,7 @@ export default function SettingsPage() {
                   <Select
                     value={business.tone}
                     onValueChange={(v) =>
-                      setBusinesses((prev) =>
-                        prev.map((b) =>
-                          b.id === business.id ? { ...b, tone: v as Business["tone"] } : b
-                        )
-                      )
+                      updateBusiness(business.id, { tone: v as Business["tone"] })
                     }
                   >
                     <SelectTrigger className="h-10 rounded-lg font-body text-sm">
@@ -327,13 +334,7 @@ export default function SettingsPage() {
                     <Switch
                       checked={business.auto_reply}
                       onCheckedChange={(checked) =>
-                        setBusinesses((prev) =>
-                          prev.map((b) =>
-                            b.id === business.id
-                              ? { ...b, auto_reply: checked }
-                              : b
-                          )
-                        )
+                        updateBusiness(business.id, { auto_reply: checked })
                       }
                       className="data-[state=checked]:bg-primary"
                     />
@@ -351,20 +352,93 @@ export default function SettingsPage() {
                 <Textarea
                   value={business.review_reply_instructions || ""}
                   onChange={(e) =>
-                    setBusinesses((prev) =>
-                      prev.map((b) =>
-                        b.id === business.id
-                          ? {
-                              ...b,
-                              review_reply_instructions: e.target.value || null,
-                            }
-                          : b
-                      )
-                    )
+                    updateBusiness(business.id, {
+                      review_reply_instructions: e.target.value || null,
+                    })
                   }
                   placeholder="e.g. Always mention our weekend brunch special. Refer customers to manager@email.com for complaints."
                   className="min-h-[80px] rounded-lg font-body text-sm resize-none"
                 />
+              </div>
+
+              {/* Pro Feature Toggles */}
+              <Separator />
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Crown className="w-4 h-4 text-primary" />
+                  <Label className="font-body text-sm font-semibold text-foreground">
+                    Pro Features
+                  </Label>
+                  {!isPro && (
+                    <Link href="/pricing">
+                      <Badge className="bg-primary/10 text-primary border-0 rounded-full text-[10px] font-body cursor-pointer hover:bg-primary/20">
+                        Upgrade to Pro
+                      </Badge>
+                    </Link>
+                  )}
+                </div>
+
+                <div className="grid gap-3">
+                  <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+                    <div className="flex items-center gap-3">
+                      <Shield className="w-4 h-4 text-red-600" />
+                      <div>
+                        <p className="text-sm font-body font-medium text-foreground">Review Shield</p>
+                        <p className="text-xs text-muted-foreground font-body">
+                          AI spam detection & flag narratives
+                        </p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={business.review_shield_enabled}
+                      onCheckedChange={(checked) =>
+                        updateBusiness(business.id, { review_shield_enabled: checked })
+                      }
+                      disabled={!isPro}
+                      className="data-[state=checked]:bg-red-600"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+                    <div className="flex items-center gap-3">
+                      <Activity className="w-4 h-4 text-blue-600" />
+                      <div>
+                        <p className="text-sm font-body font-medium text-foreground">Early-Warning Radar</p>
+                        <p className="text-xs text-muted-foreground font-body">
+                          Performance monitoring & AI alerts
+                        </p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={business.radar_enabled}
+                      onCheckedChange={(checked) =>
+                        updateBusiness(business.id, { radar_enabled: checked })
+                      }
+                      disabled={!isPro}
+                      className="data-[state=checked]:bg-blue-600"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+                    <div className="flex items-center gap-3">
+                      <CalendarCheck className="w-4 h-4 text-emerald-600" />
+                      <div>
+                        <p className="text-sm font-body font-medium text-foreground">Action Planner</p>
+                        <p className="text-xs text-muted-foreground font-body">
+                          Weekly AI tasks & auto-publish posts
+                        </p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={business.action_planner_enabled}
+                      onCheckedChange={(checked) =>
+                        updateBusiness(business.id, { action_planner_enabled: checked })
+                      }
+                      disabled={!isPro}
+                      className="data-[state=checked]:bg-emerald-600"
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="flex items-center justify-between pt-2">

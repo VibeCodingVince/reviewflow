@@ -47,3 +47,29 @@ export async function requireActiveSubscription(
 
   return { user: dbUser as User };
 }
+
+type ProFeature = "review_shield" | "radar" | "action_planner";
+
+export async function requireFeatureAccess(
+  supabase: SupabaseClient,
+  userId: string,
+  feature: ProFeature
+): Promise<{ user: User } | { error: NextResponse }> {
+  const subCheck = await requireActiveSubscription(supabase, userId);
+  if ("error" in subCheck) return subCheck;
+
+  if (subCheck.user.subscription_tier !== "pro") {
+    return {
+      error: NextResponse.json(
+        {
+          error: `Pro subscription required for ${feature.replace(/_/g, " ")}`,
+          code: "FEATURE_REQUIRED",
+          feature,
+        },
+        { status: 403 }
+      ),
+    };
+  }
+
+  return { user: subCheck.user };
+}

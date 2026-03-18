@@ -25,8 +25,12 @@ import {
   Send,
   RefreshCw,
   ExternalLink,
+  Shield,
+  AlertTriangle,
+  Flag,
+  Eye,
 } from "lucide-react";
-import type { Business, Review, ReplyStatus } from "@/lib/types";
+import type { Business, Review, ReplyStatus, FlagStatus } from "@/lib/types";
 
 export default function BusinessReviewsPage() {
   const params = useParams();
@@ -42,6 +46,8 @@ export default function BusinessReviewsPage() {
   const [bulkGenerating, setBulkGenerating] = useState(false);
   const [csvUploading, setCsvUploading] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [analyzingSpam, setAnalyzingSpam] = useState<string | null>(null);
+  const [generatingNarrative, setGeneratingNarrative] = useState<string | null>(null);
   const hasAutoSynced = useRef(false);
   const supabase = createClient();
   const { toast } = useToast();
@@ -78,7 +84,7 @@ export default function BusinessReviewsPage() {
       if (res.ok) {
         toast({
           title: "Reviews synced",
-          description: `${data.new_reviews} new review${data.new_reviews !== 1 ? "s" : ""} found`,
+          description: `${data.new_reviews} new review${data.new_reviews !== 1 ? "s" : ""} found${data.spam_flagged ? `, ${data.spam_flagged} flagged as suspicious` : ""}`,
         });
         fetchData();
       } else {
@@ -112,10 +118,14 @@ export default function BusinessReviewsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
+  const suspiciousReviews = reviews.filter((r) => r.is_suspicious);
+
   const filteredReviews =
     activeTab === "all"
       ? reviews
-      : reviews.filter((r) => r.reply_status === activeTab);
+      : activeTab === "shield"
+        ? suspiciousReviews
+        : reviews.filter((r) => r.reply_status === activeTab);
 
   async function generateReply(reviewId: string) {
     setProcessingReview(reviewId);
@@ -217,7 +227,6 @@ export default function BusinessReviewsPage() {
         );
 
         if (status === "posted") {
-          // Also post the reply
           await fetch("/api/reviews/post-reply", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -275,6 +284,88 @@ export default function BusinessReviewsPage() {
     e.target.value = "";
   }
 
+  async function analyzeReviewSpam(reviewId: string) {
+    setAnalyzingSpam(reviewId);
+    try {
+      const res = await fetch("/api/reviews/analyze-spam", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ review_id: reviewId }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        setReviews((prev) =>
+          prev.map((r) =>
+            r.id === reviewId
+              ? {
+                  ...r,
+                  spam_score: data.spam_score,
+                  spam_reasons: data.spam_reasons,
+                  is_suspicious: data.is_suspicious,
+                }
+              : r
+          )
+        );
+        toast({
+          title: "Analysis complete",
+          description: data.is_suspicious
+            ? `Suspicious! Score: ${(data.spam_score * 100).toFixed(0)}%`
+            : `Looks legitimate. Score: ${(data.spam_score * 100).toFixed(0)}%`,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: data.error,
+          variant: "destructive",
+        });
+      }
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to analyze review",
+        variant: "destructive",
+      });
+    }
+    setAnalyzingSpam(null);
+  }
+
+  async function generateFlagNarrative(reviewId: string) {
+    setGeneratingNarrative(reviewId);
+    try {
+      const res = await fetch("/api/reviews/generate-flag-narrative", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ review_id: reviewId }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        setReviews((prev) =>
+          prev.map((r) =>
+            r.id === reviewId
+              ? { ...r, flag_narrative: data.narrative, flag_status: "flagged" as FlagStatus }
+              : r
+          )
+        );
+        toast({ title: "Appeal narrative generated" });
+      } else {
+        toast({
+          title: "Error",
+          description: data.error,
+          variant: "destructive",
+        });
+      }
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to generate narrative",
+        variant: "destructive",
+      });
+    }
+    setGeneratingNarrative(null);
+  }
+
   function connectGoogle() {
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
     const redirectUri = `${window.location.origin}/api/auth/google/callback`;
@@ -313,6 +404,28 @@ export default function BusinessReviewsPage() {
     return colors[status] || "";
   }
 
+  function SpamBadge({ review }: { review: Review }) {
+    if (review.spam_score === null || review.spam_score === undefined) return null;
+    const pct = Math.round(review.spam_score * 100);
+    if (pct < 30) return null;
+
+    return (
+      <Badge
+        variant="outline"
+        className={`text-[10px] font-body rounded-full ${
+          pct >= 70
+            ? "bg-red-50 text-red-700 border-red-200"
+            : pct >= 40
+              ? "bg-amber-50 text-amber-700 border-amber-200"
+              : "bg-gray-50 text-gray-600 border-gray-200"
+        }`}
+      >
+        <Shield className="w-3 h-3 mr-1" />
+        {pct}% spam
+      </Badge>
+    );
+  }
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -344,6 +457,8 @@ export default function BusinessReviewsPage() {
     (r) => r.reply_status === "pending"
   ).length;
 
+  const shieldEnabled = business.review_shield_enabled;
+
   return (
     <div className="space-y-6 opacity-0 animate-fade-in">
       {/* Back link + header */}
@@ -372,10 +487,19 @@ export default function BusinessReviewsPage() {
                 Auto-reply ON
               </Badge>
             )}
+            {shieldEnabled && (
+              <Badge className="bg-red-50 text-red-700 border-0 rounded-full text-xs font-body">
+                <Shield className="w-3 h-3 mr-1" />
+                Shield ON
+              </Badge>
+            )}
           </div>
           <p className="text-sm text-muted-foreground font-body mt-1">
             {business.business_type} &middot; {reviews.length} reviews &middot;{" "}
             {pendingCount} pending
+            {suspiciousReviews.length > 0 && (
+              <span className="text-red-600"> &middot; {suspiciousReviews.length} suspicious</span>
+            )}
           </p>
         </div>
 
@@ -511,12 +635,25 @@ export default function BusinessReviewsPage() {
               label: "Skipped",
               count: reviews.filter((r) => r.reply_status === "skipped").length,
             },
+            ...(shieldEnabled
+              ? [
+                  {
+                    value: "shield",
+                    label: "Shield",
+                    count: suspiciousReviews.length,
+                    icon: Shield,
+                  },
+                ]
+              : []),
           ].map((tab) => (
             <TabsTrigger
               key={tab.value}
               value={tab.value}
-              className="rounded-lg font-body text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm px-4 py-2"
+              className={`rounded-lg font-body text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm px-4 py-2 ${
+                tab.value === "shield" ? "text-red-700 data-[state=active]:text-red-700" : ""
+              }`}
             >
+              {"icon" in tab && tab.icon && <tab.icon className="w-3 h-3 mr-1" />}
               {tab.label}
               <span className="ml-1.5 text-[10px] text-muted-foreground">
                 {tab.count}
@@ -529,34 +666,45 @@ export default function BusinessReviewsPage() {
           {filteredReviews.length === 0 ? (
             <Card className="rounded-2xl border-dashed border-2 border-gray-200">
               <CardContent className="p-12 text-center">
-                <FileText className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                {reviews.length === 0 && !business.google_refresh_token ? (
-                  <p className="text-sm text-muted-foreground font-body">
-                    Connect Google above to pull in your reviews
-                  </p>
-                ) : reviews.length === 0 && business.google_refresh_token ? (
+                {activeTab === "shield" ? (
                   <>
-                    <p className="text-sm text-muted-foreground font-body mb-3">
-                      No reviews found yet. Click Sync Reviews to check.
+                    <Shield className="w-10 h-10 text-emerald-400 mx-auto mb-3" />
+                    <p className="text-sm text-muted-foreground font-body">
+                      No suspicious reviews detected. Your reviews look clean!
                     </p>
-                    <Button
-                      variant="outline"
-                      className="h-9 rounded-xl font-body text-sm border-gray-200"
-                      onClick={pullReviews}
-                      disabled={syncing}
-                    >
-                      {syncing ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <RefreshCw className="w-4 h-4 mr-2" />
-                      )}
-                      Sync Reviews
-                    </Button>
                   </>
                 ) : (
-                  <p className="text-sm text-muted-foreground font-body">
-                    No reviews in this category
-                  </p>
+                  <>
+                    <FileText className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                    {reviews.length === 0 && !business.google_refresh_token ? (
+                      <p className="text-sm text-muted-foreground font-body">
+                        Connect Google above to pull in your reviews
+                      </p>
+                    ) : reviews.length === 0 && business.google_refresh_token ? (
+                      <>
+                        <p className="text-sm text-muted-foreground font-body mb-3">
+                          No reviews found yet. Click Sync Reviews to check.
+                        </p>
+                        <Button
+                          variant="outline"
+                          className="h-9 rounded-xl font-body text-sm border-gray-200"
+                          onClick={pullReviews}
+                          disabled={syncing}
+                        >
+                          {syncing ? (
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          ) : (
+                            <RefreshCw className="w-4 h-4 mr-2" />
+                          )}
+                          Sync Reviews
+                        </Button>
+                      </>
+                    ) : (
+                      <p className="text-sm text-muted-foreground font-body">
+                        No reviews in this category
+                      </p>
+                    )}
+                  </>
                 )}
               </CardContent>
             </Card>
@@ -564,6 +712,8 @@ export default function BusinessReviewsPage() {
             <div className="space-y-4">
               {filteredReviews.map((review) => {
                 const isProcessing = processingReview === review.id;
+                const isAnalyzing = analyzingSpam === review.id;
+                const isNarrating = generatingNarrative === review.id;
                 const currentReply =
                   editingReply[review.id] ??
                   review.edited_reply ??
@@ -573,7 +723,9 @@ export default function BusinessReviewsPage() {
                 return (
                   <Card
                     key={review.id}
-                    className="rounded-2xl border-gray-100 shadow-none hover:shadow-[0_4px_20px_rgba(0,0,0,0.04)] transition-shadow"
+                    className={`rounded-2xl border-gray-100 shadow-none hover:shadow-[0_4px_20px_rgba(0,0,0,0.04)] transition-shadow ${
+                      review.is_suspicious ? "border-l-4 border-l-red-300" : ""
+                    }`}
                   >
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between mb-3">
@@ -600,17 +752,82 @@ export default function BusinessReviewsPage() {
                             </div>
                           </div>
                         </div>
-                        <Badge
-                          variant="outline"
-                          className={`capitalize rounded-full text-[10px] font-body ${statusColor(review.reply_status)}`}
-                        >
-                          {review.reply_status}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <SpamBadge review={review} />
+                          <Badge
+                            variant="outline"
+                            className={`capitalize rounded-full text-[10px] font-body ${statusColor(review.reply_status)}`}
+                          >
+                            {review.reply_status}
+                          </Badge>
+                        </div>
                       </div>
 
                       <p className="text-sm text-foreground/80 font-body leading-relaxed mb-4 pl-[52px]">
                         &ldquo;{review.review_text}&rdquo;
                       </p>
+
+                      {/* Spam reasons (if analyzed) */}
+                      {review.is_suspicious && review.spam_reasons && review.spam_reasons.length > 0 && (
+                        <div className="pl-[52px] mb-4">
+                          <div className="bg-red-50 rounded-xl p-4 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <AlertTriangle className="w-3.5 h-3.5 text-red-600" />
+                              <span className="text-xs font-body font-medium text-red-700 uppercase tracking-wider">
+                                Suspicious Review — {Math.round((review.spam_score || 0) * 100)}% spam score
+                              </span>
+                            </div>
+                            <ul className="space-y-1">
+                              {review.spam_reasons.map((reason, i) => (
+                                <li key={i} className="text-xs text-red-700 font-body flex items-start gap-1.5">
+                                  <span className="mt-1 w-1 h-1 rounded-full bg-red-400 shrink-0" />
+                                  {reason}
+                                </li>
+                              ))}
+                            </ul>
+
+                            {/* Flag status tracker */}
+                            {review.flag_status !== "none" && (
+                              <div className="flex items-center gap-2 pt-2 border-t border-red-200">
+                                <Flag className="w-3 h-3 text-red-600" />
+                                <span className="text-xs font-body text-red-700 capitalize">
+                                  Status: {review.flag_status}
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Flag narrative */}
+                            {review.flag_narrative && (
+                              <div className="pt-2 border-t border-red-200">
+                                <p className="text-xs font-body font-medium text-red-700 mb-1">Appeal Narrative:</p>
+                                <p className="text-xs text-red-700/80 font-body leading-relaxed whitespace-pre-wrap">
+                                  {review.flag_narrative}
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Actions */}
+                            <div className="flex items-center gap-2 pt-2">
+                              {!review.flag_narrative && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 rounded-lg font-body text-[11px] border-red-200 text-red-700 hover:bg-red-100"
+                                  onClick={() => generateFlagNarrative(review.id)}
+                                  disabled={isNarrating}
+                                >
+                                  {isNarrating ? (
+                                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                  ) : (
+                                    <Flag className="w-3 h-3 mr-1" />
+                                  )}
+                                  Generate Appeal
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
 
                       {/* Reply section */}
                       <div className="pl-[52px]">
@@ -693,6 +910,22 @@ export default function BusinessReviewsPage() {
                                 <RotateCw className="w-3 h-3 mr-1" />
                                 Regenerate
                               </Button>
+                              {shieldEnabled && review.spam_score === null && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-8 rounded-lg font-body text-xs border-gray-200"
+                                  onClick={() => analyzeReviewSpam(review.id)}
+                                  disabled={isAnalyzing}
+                                >
+                                  {isAnalyzing ? (
+                                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                  ) : (
+                                    <Eye className="w-3 h-3 mr-1" />
+                                  )}
+                                  Scan for Spam
+                                </Button>
+                              )}
                               {review.reply_status !== "skipped" && (
                                 <Button
                                   size="sm"
@@ -710,19 +943,36 @@ export default function BusinessReviewsPage() {
                             </div>
                           </div>
                         ) : (
-                          <Button
-                            variant="outline"
-                            className="h-9 rounded-xl font-body text-sm border-primary/20 text-primary hover:bg-primary/5"
-                            onClick={() => generateReply(review.id)}
-                            disabled={isProcessing}
-                          >
-                            {isProcessing ? (
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            ) : (
-                              <Sparkles className="w-4 h-4 mr-2" />
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              className="h-9 rounded-xl font-body text-sm border-primary/20 text-primary hover:bg-primary/5"
+                              onClick={() => generateReply(review.id)}
+                              disabled={isProcessing}
+                            >
+                              {isProcessing ? (
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              ) : (
+                                <Sparkles className="w-4 h-4 mr-2" />
+                              )}
+                              Generate Reply
+                            </Button>
+                            {shieldEnabled && review.spam_score === null && (
+                              <Button
+                                variant="outline"
+                                className="h-9 rounded-xl font-body text-sm border-gray-200"
+                                onClick={() => analyzeReviewSpam(review.id)}
+                                disabled={isAnalyzing}
+                              >
+                                {isAnalyzing ? (
+                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                ) : (
+                                  <Shield className="w-4 h-4 mr-2" />
+                                )}
+                                Scan for Spam
+                              </Button>
                             )}
-                            Generate Reply
-                          </Button>
+                          </div>
                         )}
                       </div>
                     </CardContent>
