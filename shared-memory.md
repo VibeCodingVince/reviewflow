@@ -5,14 +5,32 @@
 ---
 
 ## Current Status
-- **Last updated:** 2026-03-20 (Mac session #2)
-- **Phase:** Database provisioned, demo seed script ready, env vars partially configured
-- **Last session:** Created Radar demo seed script, ready to run after first user signup
+- **Last updated:** 2026-03-21 (Windows session #1)
+- **Phase:** Google OAuth signup flow fixed, ready to configure Google Cloud Console
+- **Last session:** Fixed Google OAuth signup, updated Windows .env.local with Supabase credentials
 - **Repo:** https://github.com/VibeCodingVince/reviewflow
 - **Build status:** Clean (`npm run build` passes)
 - **Supabase project:** `https://vdkujkrurjqklkpofpmz.supabase.co` — all 7 tables, RLS, triggers, indexes live
+- **Dev server:** Running on Windows at http://localhost:3001
 
-### What was done this session (2026-03-20, session #2)
+### What was done this session (2026-03-21, Windows session #1)
+1. **Fixed Google OAuth signup flow** — 3 major fixes:
+   - Created migration 007 (`007_fix_google_oauth.sql`) to fix `handle_new_user()` trigger
+     - Now extracts name from Google OAuth metadata (`name` field)
+     - Falls back to email username if no name provided
+   - Enhanced auth callback route with user record verification and fallback creation
+   - Updated signup/login pages with proper OAuth options (`access_type: offline`, `prompt: consent`)
+2. **Updated Windows .env.local** with real Supabase credentials (URL, anon key, service role key)
+3. **Created comprehensive documentation:**
+   - `GOOGLE_OAUTH_SETUP.md` - Step-by-step Google OAuth setup guide
+   - `FIXES_APPLIED.md` - Summary of fixes and testing checklist
+   - `scripts/run-migration-007.ts` - Script to run migration 007
+4. **Fixed build issues** - Excluded `scripts/` from tsconfig to prevent TypeScript errors
+5. **Tested signup flow** - Got error: "provider is not enabled" - need to enable Google in Supabase
+
+**Stopped at:** Need to create Google OAuth credentials in Google Cloud Console and enable Google provider in Supabase
+
+### Previous session (2026-03-20, session #2)
 1. **Created Radar demo seed script** at `scripts/seed-radar-demo.ts`
    - Run with: `npx tsx scripts/seed-radar-demo.ts`
    - Requires a user account to exist first (sign up at /login)
@@ -24,20 +42,52 @@
 1. Created Supabase project, ran all 6 migrations, configured `.env.local` with Supabase credentials
 
 ### What needs to be done next
-**Immediate (on Windows):**
-1. **Sign up** at http://localhost:3000/login (create first user account)
+**Immediate next steps (continue from where we stopped):**
+1. **Set up Google OAuth in Google Cloud Console:**
+   - Go to https://console.cloud.google.com/apis/credentials
+   - Create OAuth client ID (or use existing)
+   - Configure consent screen
+   - Add redirect URIs:
+     - `http://localhost:3001/api/auth/callback`
+     - `https://vdkujkrurjqklkpofpmz.supabase.co/auth/v1/callback`
+   - Copy Client ID and Client Secret
+   - See `GOOGLE_OAUTH_SETUP.md` for detailed steps
+
+2. **Enable Google provider in Supabase:**
+   - Go to https://supabase.com/dashboard/project/vdkujkrurjqklkpofpmz/auth/providers
+   - Enable Google provider
+   - Paste Client ID and Client Secret
+   - Save
+
+3. **Add Google credentials to Windows `.env.local`:**
+   - `GOOGLE_CLIENT_ID=...`
+   - `GOOGLE_CLIENT_SECRET=...`
+
+4. **Run migration 007:**
+   - `npx tsx scripts/run-migration-007.ts`
+
+5. **Test Google OAuth signup:**
+   - Visit http://localhost:3001/signup
+   - Click "Continue with Google"
+   - Complete OAuth flow
+   - Verify user record created in Supabase
+
+**After Google OAuth works:**
+1. **Sign up** and create first user account
 2. **Run seed script:** `npx tsx scripts/seed-radar-demo.ts` — seeds Radar demo data
-3. **Visit /radar** to see the Early-Warning Radar demo in action
+3. **Visit /radar** to see the Early-Warning Radar demo
 
 **Before going live (priority order):**
-1. ~~Run migrations on Supabase~~ — DONE
-2. **Add remaining env vars to `.env.local`:** Stripe keys (secret, webhook, publishable, price IDs for single/multi/pro), Anthropic API key, Google OAuth client ID/secret, CRON_SECRET
-3. **Create Stripe products/prices** — Single ($29), Multi ($79), Pro ($149) in Stripe dashboard
-4. **Set up Google OAuth** — configure consent screen + credentials in Google Cloud Console
-5. **Set up Vercel cron config** for new cron jobs (check-performance daily 2AM, generate-tasks weekly Monday 6AM, publish-posts every 6h)
-6. **Test end-to-end flows** — signup, add business, connect Google, pull reviews, generate replies, Pro features
-7. **Frontend subscription gate UX** — Handle `FEATURE_REQUIRED` 403 responses in the UI (show upgrade prompt)
-8. **Deploy to Vercel**
+1. ~~Run migrations 001-006 on Supabase~~ — DONE
+2. ~~Fix Google OAuth signup~~ — DONE (migration 007 created)
+3. ~~Configure Windows .env.local with Supabase~~ — DONE
+4. **Complete Google OAuth setup** — IN PROGRESS
+5. **Add remaining env vars to `.env.local`:** Stripe keys, Anthropic API key, CRON_SECRET
+6. **Create Stripe products/prices** — Single ($29), Multi ($79), Pro ($149) in Stripe dashboard
+7. **Set up Vercel cron config** for new cron jobs (check-performance daily 2AM, generate-tasks weekly Monday 6AM, publish-posts every 6h)
+8. **Test end-to-end flows** — signup, add business, connect Google, pull reviews, generate replies, Pro features
+9. **Frontend subscription gate UX** — Handle `FEATURE_REQUIRED` 403 responses in the UI (show upgrade prompt)
+10. **Deploy to Vercel**
 
 **Polish items:**
 9. CSV import validation improvements
@@ -53,7 +103,14 @@ generate-tasks:     0 6 * * 1           (weekly Monday 6 AM)
 publish-posts:      0 */6 * * *         (every 6 hours)
 ```
 
-## Lessons Learned / Gotchas
+## Lessons Learned / Gotchas (2026-03-21 additions)
+- **Google OAuth metadata structure:** Google OAuth stores user name as `name` (not `full_name`) in Supabase `raw_user_meta_data`. Email signup uses `full_name`. Trigger must check both.
+- **Supabase Google provider must be enabled:** Just having OAuth credentials isn't enough - must explicitly enable Google provider in Supabase dashboard (Authentication → Providers)
+- **Auth callback verification:** After OAuth, always verify user record exists in `public.users` table (not just `auth.users`). Trigger can fail silently.
+- **Windows port conflicts:** If port 3000 is in use, Next.js auto-switches to 3001. Always check console for actual port.
+- **tsconfig includes scripts:** Next.js tsconfig includes `**/*.ts` which includes scripts directory. Must exclude scripts to prevent build errors on script files.
+
+## Previous Lessons Learned / Gotchas
 - **Stripe lazy init:** Must use `getStripe()` factory, NOT top-level `new Stripe()` — causes build failure when env vars aren't set at build time
 - **Next.js 14 prerender:** Client pages using Supabase fail prerender without env vars — need `.env.local` with placeholder values for builds to pass
 - **Next.js route file exports:** Route files can ONLY export HTTP method handlers (GET, POST, etc.). Exporting helper functions like `analyzeSpam` causes build errors ("Property is incompatible with index signature"). Solution: extract to a separate `src/lib/` file.

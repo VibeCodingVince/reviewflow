@@ -84,6 +84,7 @@ supabase/migrations/         # SQL schema with RLS policies (001-006)
 - `004_radar.sql` — performance_snapshots + alerts tables + RLS + radar_enabled/health_score on businesses
 - `005_action_planner.sql` — optimization_tasks + gbp_posts tables + RLS + action_planner_enabled on businesses
 - `006_pro_tier.sql` — Adds 'pro' to subscription_tier constraint
+- `007_fix_google_oauth.sql` — Fixes handle_new_user() trigger to properly extract name from Google OAuth metadata (uses `name` field, falls back to email username)
 
 ## 3 AI Agent Features (Pro Tier)
 
@@ -130,11 +131,15 @@ supabase/migrations/         # SQL schema with RLS policies (001-006)
 ## Supabase Project
 - **Project URL:** `https://vdkujkrurjqklkpofpmz.supabase.co`
 - **Migrations 001–006** have been run on the live Supabase project (as of 2026-03-20)
+- **Migration 007** created but NOT YET RUN (needs to be run: `npx tsx scripts/run-migration-007.ts`)
 - Database is fully provisioned: all 7 tables, RLS policies, triggers, indexes
 
 ## Environment Variables
-See `.env.example` for all required vars. `.env.local` exists with Supabase credentials configured (gitignored).
-Still needed in `.env.local`: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_PRICE_SINGLE`, `STRIPE_PRICE_MULTI`, `STRIPE_PRICE_PRO`, `ANTHROPIC_API_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `CRON_SECRET`.
+See `.env.example` for all required vars. `.env.local` exists with Supabase credentials configured on both Mac and Windows (gitignored).
+
+**Windows `.env.local` status (as of 2026-03-21):**
+- ✅ Supabase URL, anon key, service role key configured
+- ❌ Still needed: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_PRICE_SINGLE`, `STRIPE_PRICE_MULTI`, `STRIPE_PRICE_PRO`, `ANTHROPIC_API_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `CRON_SECRET`
 
 ## Commands
 - `npm run dev` — Start dev server
