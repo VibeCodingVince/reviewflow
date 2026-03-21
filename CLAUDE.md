@@ -127,9 +127,14 @@ supabase/migrations/         # SQL schema with RLS policies (001-006)
 - **Pro: $149/mo — up to 5 locations, review replies + Shield + Radar + Planner**
 - 7-day free trial, no card required
 
+## Supabase Project
+- **Project URL:** `https://vdkujkrurjqklkpofpmz.supabase.co`
+- **Migrations 001–006** have been run on the live Supabase project (as of 2026-03-20)
+- Database is fully provisioned: all 7 tables, RLS policies, triggers, indexes
+
 ## Environment Variables
-See `.env.example` for all required vars. `.env.local` exists with placeholders for local dev (gitignored).
-New env var needed: `STRIPE_PRICE_PRO` for Pro tier Stripe price ID.
+See `.env.example` for all required vars. `.env.local` exists with Supabase credentials configured (gitignored).
+Still needed in `.env.local`: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_PRICE_SINGLE`, `STRIPE_PRICE_MULTI`, `STRIPE_PRICE_PRO`, `ANTHROPIC_API_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `CRON_SECRET`.
 
 ## Commands
 - `npm run dev` — Start dev server
