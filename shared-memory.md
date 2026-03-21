@@ -5,22 +5,30 @@
 ---
 
 ## Current Status
-- **Last updated:** 2026-03-20 (Mac session)
-- **Phase:** Database provisioned, env vars partially configured — approaching deploy-ready
-- **Last session:** Created Supabase project, ran all 6 migrations, configured `.env.local` with Supabase credentials
+- **Last updated:** 2026-03-20 (Mac session #2)
+- **Phase:** Database provisioned, demo seed script ready, env vars partially configured
+- **Last session:** Created Radar demo seed script, ready to run after first user signup
 - **Repo:** https://github.com/VibeCodingVince/reviewflow
 - **Build status:** Clean (`npm run build` passes)
 - **Supabase project:** `https://vdkujkrurjqklkpofpmz.supabase.co` — all 7 tables, RLS, triggers, indexes live
 
-### What was done this session (2026-03-20)
-1. **Created Supabase project** — brand new project provisioned
-2. **Ran all 6 migrations** (001–006) via SQL Editor — database fully set up:
-   - 7 tables: users, businesses, reviews, performance_snapshots, alerts, optimization_tasks, gbp_posts
-   - All RLS policies, indexes, triggers (handle_new_user, update_updated_at)
-   - Pro tier constraint on subscription_tier
-3. **Configured `.env.local`** with Supabase URL, anon key, and service role key
+### What was done this session (2026-03-20, session #2)
+1. **Created Radar demo seed script** at `scripts/seed-radar-demo.ts`
+   - Run with: `npx tsx scripts/seed-radar-demo.ts`
+   - Requires a user account to exist first (sign up at /login)
+   - Seeds: upgrades user to Pro, creates/configures business, 30 days of performance snapshots (with realistic dip story), 4 alerts (1 critical, 2 warning, 1 info)
+   - After seeding, visit `/radar` to see the Early-Warning Radar demo
+2. **No user account exists yet** — need to sign up before running seed script
+
+### Previous session (2026-03-20, session #1)
+1. Created Supabase project, ran all 6 migrations, configured `.env.local` with Supabase credentials
 
 ### What needs to be done next
+**Immediate (on Windows):**
+1. **Sign up** at http://localhost:3000/login (create first user account)
+2. **Run seed script:** `npx tsx scripts/seed-radar-demo.ts` — seeds Radar demo data
+3. **Visit /radar** to see the Early-Warning Radar demo in action
+
 **Before going live (priority order):**
 1. ~~Run migrations on Supabase~~ — DONE
 2. **Add remaining env vars to `.env.local`:** Stripe keys (secret, webhook, publishable, price IDs for single/multi/pro), Anthropic API key, Google OAuth client ID/secret, CRON_SECRET

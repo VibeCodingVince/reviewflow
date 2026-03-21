@@ -140,6 +140,10 @@ Still needed in `.env.local`: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEX
 - `npm run dev` — Start dev server
 - `npm run build` — Production build
 - `npm run lint` — ESLint
+- `npx tsx scripts/seed-radar-demo.ts` — Seed Radar demo data (requires user account to exist first)
+
+## Scripts
+- `scripts/seed-radar-demo.ts` — Seeds demo data for Early-Warning Radar: upgrades user to Pro, creates business, inserts 30 days of performance snapshots + 4 alerts. Run after signing up.
 
 ---
 
