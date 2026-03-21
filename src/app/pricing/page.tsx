@@ -168,7 +168,7 @@ export default function PricingPage() {
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             <PricingCard
               name="Single"
-              price="$29"
+              price="$19"
               description="Perfect for one location"
               tier="single"
               features={[
@@ -182,7 +182,7 @@ export default function PricingPage() {
             />
             <PricingCard
               name="Multi"
-              price="$79"
+              price="$49"
               description="For growing businesses"
               tier="multi"
               features={[
@@ -196,7 +196,7 @@ export default function PricingPage() {
             />
             <PricingCard
               name="Pro"
-              price="$149"
+              price="$99"
               description="Full GBP management suite"
               tier="pro"
               popular

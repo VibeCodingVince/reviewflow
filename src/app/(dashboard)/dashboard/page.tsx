@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -38,6 +38,8 @@ import {
   RefreshCw,
   Sparkles,
   AlertCircle,
+  CheckCircle,
+  Heart,
 } from "lucide-react";
 import type { Business } from "@/lib/types";
 
@@ -68,9 +70,18 @@ export default function DashboardPage() {
     tone: "friendly",
   });
   const [saving, setSaving] = useState(false);
+  const [showCheckoutSuccess, setShowCheckoutSuccess] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (searchParams.get("checkout") === "success") {
+      setShowCheckoutSuccess(true);
+      window.history.replaceState({}, "", "/dashboard");
+    }
+  }, [searchParams]);
 
   const fetchData = useCallback(async () => {
     const { data: bizData } = await supabase
@@ -173,6 +184,33 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8 opacity-0 animate-fade-in">
+      {/* Checkout Success Modal */}
+      <Dialog open={showCheckoutSuccess} onOpenChange={setShowCheckoutSuccess}>
+        <DialogContent className="sm:max-w-md text-center">
+          <div className="flex flex-col items-center py-4">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+              <CheckCircle className="w-8 h-8 text-primary" />
+            </div>
+            <DialogHeader>
+              <DialogTitle className="font-display text-2xl text-center">Welcome aboard!</DialogTitle>
+            </DialogHeader>
+            <p className="text-muted-foreground font-body mt-2 leading-relaxed">
+              Thank you for supporting us and believing in ReviewFlow. Your subscription is now active — let&apos;s grow your business together.
+            </p>
+            <div className="flex items-center gap-1.5 mt-4 text-sm text-primary font-body font-medium">
+              <Heart className="w-4 h-4" />
+              <span>We&apos;re glad to have you</span>
+            </div>
+            <Button
+              className="mt-6 bg-primary text-white rounded-xl px-8 font-body"
+              onClick={() => setShowCheckoutSuccess(false)}
+            >
+              Get Started
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

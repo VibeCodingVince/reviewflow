@@ -215,8 +215,16 @@ export default function LandingPage() {
               </div>
 
               <h1 className="font-display text-5xl md:text-6xl lg:text-[4.25rem] leading-[1.08] text-foreground mb-6 opacity-0 animate-fade-in stagger-1">
-                Never Miss a Google Review{" "}
-                <span className="italic text-primary">Again</span>
+                <span className="relative inline-block">
+                  <span className="relative z-10">Never Miss</span>
+                  <span className="absolute bottom-1 md:bottom-2 left-[-4px] right-[-4px] h-[35%] bg-primary/10 animate-highlight-reveal origin-left" style={{ width: 0 }} />
+                </span>{" "}
+                <br className="hidden md:block" />
+                a Google Review{" "}
+                <span className="relative inline-block italic">
+                  <span className="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-primary to-emerald-500">Again</span>
+                  <span className="absolute -bottom-1 left-0 w-full h-[3px] bg-gradient-to-r from-primary to-emerald-500 rounded-full" />
+                </span>
               </h1>
 
               <p className="text-lg md:text-xl text-muted-foreground font-body leading-relaxed mb-10 opacity-0 animate-fade-in stagger-2">
@@ -458,7 +466,7 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             <PricingCard
               name="Single"
-              price="$29"
+              price="$19"
               description="Perfect for one location"
               tier="single"
               features={[
@@ -472,7 +480,7 @@ export default function LandingPage() {
             />
             <PricingCard
               name="Multi"
-              price="$79"
+              price="$49"
               description="For growing businesses"
               tier="multi"
               features={[
@@ -486,7 +494,7 @@ export default function LandingPage() {
             />
             <PricingCard
               name="Pro"
-              price="$149"
+              price="$99"
               description="Full GBP management suite"
               tier="pro"
               popular

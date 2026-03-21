@@ -52,6 +52,7 @@ supabase/migrations/         # SQL schema with RLS policies (001-006)
 ```
 
 ## Key Patterns
+- **Checkout success modal:** Dashboard shows a thank-you modal when redirected from Stripe with `?checkout=success` query param. Cleans URL via `window.history.replaceState`.
 - **Stripe client** is lazy-initialized via `getStripe()` (not top-level) to avoid build errors when env vars are missing
 - **Supabase SSR** uses `@supabase/ssr` with cookie-based auth — three clients: browser (`client.ts`), server component (`server.ts`), admin/service role (`admin.ts`)
 - **RLS policies** enforce that users can only access their own data; reviews/alerts/tasks/posts are accessed through business ownership
@@ -109,37 +110,41 @@ supabase/migrations/         # SQL schema with RLS policies (001-006)
 ## Cron Schedule
 | Job | Route | Frequency |
 |---|---|---|
-| check-reviews | `/api/cron/check-reviews` | Every 30 min |
+| check-reviews | `/api/cron/check-reviews` | Every 12 hours |
 | check-performance | `/api/cron/check-performance` | Daily 2 AM |
 | generate-tasks | `/api/cron/generate-tasks` | Weekly Monday 6 AM |
-| publish-posts | `/api/cron/publish-posts` | Every 6 hours |
+| publish-posts | `/api/cron/publish-posts` | Every 12 hours |
 
 ## Design System
 - **Brand primary:** Dark green `#1B4332` (HSL: 153 46% 18%)
 - **Style:** Premium/editorial, not corporate. White bg, light gray accents
-- **Animations:** fade-in, slide-in-right, scale-in, float, shimmer + stagger delays
+- **Animations:** fade-in, slide-in-right, scale-in, float, shimmer, highlight-reveal + stagger delays
 - **Utility classes:** `.font-display`, `.font-body`, `.grain-overlay`, `.stagger-1` through `.stagger-6`
 - Follow `skills/frontend-design/SKILL.md` for all UI work
 - Follow `skills/saas-architecture/SKILL.md` for all backend work
 
 ## Pricing Tiers
-- Single: $29/mo — 1 location, review replies only
-- Multi: $79/mo — up to 5 locations, review replies only
-- **Pro: $149/mo — up to 5 locations, review replies + Shield + Radar + Planner**
+- Single: $19/mo — 1 location, review replies only
+- Multi: $49/mo — up to 5 locations, review replies only
+- **Pro: $99/mo — up to 5 locations, review replies + Shield + Radar + Planner**
 - 7-day free trial, no card required
 
 ## Supabase Project
 - **Project URL:** `https://vdkujkrurjqklkpofpmz.supabase.co`
 - **Migrations 001–006** have been run on the live Supabase project (as of 2026-03-20)
-- **Migration 007** created but NOT YET RUN (needs to be run: `npx tsx scripts/run-migration-007.ts`)
+- **Migration 007** has been run on the live Supabase project (as of 2026-03-21)
 - Database is fully provisioned: all 7 tables, RLS policies, triggers, indexes
 
 ## Environment Variables
-See `.env.example` for all required vars. `.env.local` exists with Supabase credentials configured on both Mac and Windows (gitignored).
+See `.env.example` for all required vars. `.env.local` exists with credentials configured (gitignored).
 
-**Windows `.env.local` status (as of 2026-03-21):**
-- ✅ Supabase URL, anon key, service role key configured
-- ❌ Still needed: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_PRICE_SINGLE`, `STRIPE_PRICE_MULTI`, `STRIPE_PRICE_PRO`, `ANTHROPIC_API_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `CRON_SECRET`
+**Mac `.env.local` status (as of 2026-03-21):**
+- ✅ Supabase URL, anon key, service role key
+- ✅ Google OAuth (Client ID + Secret)
+- ✅ Anthropic API key
+- ✅ Stripe keys (publishable + secret) and price IDs (Single/Multi/Pro)
+- ✅ CRON_SECRET
+- ❌ Still needed: `STRIPE_WEBHOOK_SECRET` (set up when deploying to Vercel)
 
 ## Commands
 - `npm run dev` — Start dev server

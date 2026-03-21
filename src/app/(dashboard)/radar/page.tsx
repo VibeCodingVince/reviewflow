@@ -201,7 +201,7 @@ export default function RadarPage() {
 
         {[
           { label: "Website Clicks", value: latestSnapshot?.website_clicks, prev: prevSnapshot?.website_clicks, icon: Globe },
-          { label: "Phone Calls", value: latestSnapshot?.call_clicks, prev: prevSnapshot?.call_clicks, icon: Phone },
+          { label: "Call Clicks", value: latestSnapshot?.call_clicks, prev: prevSnapshot?.call_clicks, icon: Phone },
           { label: "Directions", value: latestSnapshot?.direction_requests, prev: prevSnapshot?.direction_requests, icon: MapPin },
           { label: "Impressions", value: (latestSnapshot?.search_impressions || 0) + (latestSnapshot?.maps_impressions || 0), prev: prevSnapshot ? (prevSnapshot.search_impressions || 0) + (prevSnapshot.maps_impressions || 0) : null, icon: Eye },
         ].map((metric) => {

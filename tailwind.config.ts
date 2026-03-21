@@ -78,6 +78,10 @@ const config: Config = {
           "0%": { backgroundPosition: "-200% 0" },
           "100%": { backgroundPosition: "200% 0" },
         },
+        "highlight-reveal": {
+          from: { width: "0%" },
+          to: { width: "100%" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -87,6 +91,7 @@ const config: Config = {
         "scale-in": "scale-in 0.3s ease-out forwards",
         float: "float 3s ease-in-out infinite",
         shimmer: "shimmer 2s linear infinite",
+        "highlight-reveal": "highlight-reveal 0.8s ease-out 0.6s forwards",
       },
     },
   },
