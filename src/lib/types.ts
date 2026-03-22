@@ -122,6 +122,18 @@ export interface OptimizationTask {
   completed_at: string | null;
 }
 
+export interface Lead {
+  id: string;
+  email: string;
+  business_name: string;
+  place_id: string | null;
+  score: number | null;
+  score_breakdown: Record<string, unknown> | null;
+  source: string;
+  converted: boolean;
+  created_at: string;
+}
+
 export interface GBPPost {
   id: string;
   business_id: string;

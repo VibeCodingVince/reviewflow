@@ -10,6 +10,21 @@ import {
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { useI18n } from "@/lib/i18n/context";
+import { LanguageToggle } from "@/components/language-toggle";
+import { motion } from "motion/react";
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0 },
+};
+
+const staggerContainer = {
+  hidden: {},
+  visible: {
+    transition: { staggerChildren: 0.1, delayChildren: 0.15 },
+  },
+};
 
 function PricingCard({
   name,
@@ -28,6 +43,7 @@ function PricingCard({
 }) {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { t } = useI18n();
 
   async function handleCheckout() {
     setLoading(true);
@@ -43,15 +59,15 @@ function PricingCard({
         window.location.href = data.url;
       } else {
         toast({
-          title: "Error",
-          description: data.error || "Failed to start checkout",
+          title: t.pricing.errorTitle,
+          description: data.error || t.pricing.errorCheckout,
           variant: "destructive",
         });
       }
     } catch {
       toast({
-        title: "Error",
-        description: "Failed to start checkout",
+        title: t.pricing.errorTitle,
+        description: t.pricing.errorCheckout,
         variant: "destructive",
       });
     }
@@ -59,8 +75,11 @@ function PricingCard({
   }
 
   return (
-    <div
-      className={`relative rounded-2xl p-8 transition-all duration-300 hover:-translate-y-1 ${
+    <motion.div
+      variants={fadeUp}
+      whileHover={{ y: -6 }}
+      transition={{ type: "spring", stiffness: 300, damping: 25 }}
+      className={`relative rounded-2xl p-8 ${
         popular
           ? "bg-primary text-white shadow-[0_20px_60px_rgba(27,67,50,0.3)] scale-105"
           : "bg-white border border-gray-200 shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)]"
@@ -68,7 +87,7 @@ function PricingCard({
     >
       {popular && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-amber-400 text-primary text-xs font-body font-bold rounded-full uppercase tracking-wider">
-          Most Popular
+          {t.pricing.mostPopular}
         </div>
       )}
       <h3
@@ -86,7 +105,7 @@ function PricingCard({
         <span
           className={`text-sm font-body ${popular ? "text-white/60" : "text-muted-foreground"}`}
         >
-          /mo
+          {t.pricing.perMonth}
         </span>
       </div>
       <ul className="space-y-3 mb-8">
@@ -103,29 +122,37 @@ function PricingCard({
           </li>
         ))}
       </ul>
-      <Button
-        className={`w-full h-12 font-body font-semibold rounded-xl transition-all ${
-          popular
-            ? "bg-white text-primary hover:bg-white/90"
-            : "bg-primary text-white hover:bg-primary/90"
-        }`}
-        onClick={handleCheckout}
-        disabled={loading}
+      <motion.div
+        whileHover={{ scale: 1.03, y: -2 }}
+        whileTap={{ scale: 0.98 }}
+        transition={{ type: "spring", stiffness: 300, damping: 25 }}
       >
-        {loading ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
-        ) : (
-          <>
-            Start Free Trial
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </>
-        )}
-      </Button>
-    </div>
+        <Button
+          className={`w-full h-12 font-body font-semibold rounded-xl transition-colors ${
+            popular
+              ? "bg-white text-primary hover:bg-white/90"
+              : "bg-primary text-white hover:bg-primary/90"
+          }`}
+          onClick={handleCheckout}
+          disabled={loading}
+        >
+          {loading ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <>
+              {t.pricing.hireAgent}
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </>
+          )}
+        </Button>
+      </motion.div>
+    </motion.div>
   );
 }
 
 export default function PricingPage() {
+  const { t } = useI18n();
+
   return (
     <div className="min-h-screen bg-background">
       {/* Nav */}
@@ -140,14 +167,21 @@ export default function PricingPage() {
         </Link>
         <div className="flex items-center gap-4">
           <Link
+            href="/audit"
+            className="text-sm font-body text-primary font-medium hover:text-primary/80 transition-colors"
+          >
+            {t.nav.freeAudit}
+          </Link>
+          <Link
             href="/login"
             className="text-sm font-body text-muted-foreground hover:text-foreground transition-colors"
           >
-            Sign in
+            {t.nav.signIn}
           </Link>
+          <LanguageToggle />
           <Link href="/signup">
             <Button className="h-9 px-5 rounded-full bg-primary text-white font-body text-sm font-medium hover:bg-primary/90">
-              Get Started
+              {t.nav.getStarted}
             </Button>
           </Link>
         </div>
@@ -155,103 +189,122 @@ export default function PricingPage() {
 
       <div className="py-20 md:py-32">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <h1 className="font-display text-4xl md:text-5xl text-foreground mb-4">
-              Simple, Transparent{" "}
-              <span className="italic text-primary">Pricing</span>
-            </h1>
-            <p className="text-lg text-muted-foreground font-body">
-              Start free for 7 days. No credit card required. Cancel anytime.
-            </p>
-          </div>
+          <motion.div
+            className="text-center max-w-2xl mx-auto mb-16"
+            initial="hidden"
+            animate="visible"
+            variants={staggerContainer}
+          >
+            <motion.h1
+              className="font-display text-4xl md:text-5xl text-foreground mb-4"
+              variants={fadeUp}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {t.pricing.title1}{" "}
+              <span className="italic text-primary">{t.pricing.title2}</span>
+            </motion.h1>
+            <motion.p
+              className="text-lg text-muted-foreground font-body"
+              variants={fadeUp}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {t.pricing.subtitleFull}
+            </motion.p>
+          </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <motion.div
+            className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-80px" }}
+            variants={staggerContainer}
+          >
             <PricingCard
-              name="Single"
+              name={t.pricing.singleName}
               price="$19"
-              description="Perfect for one location"
+              description={t.pricing.singleDesc}
               tier="single"
               features={[
-                "1 Google Business location",
-                "Unlimited AI-generated replies",
-                "Custom brand voice & tone",
-                "Auto-reply or manual approval",
-                "CSV review import",
-                "Email support",
+                t.pricing.singleF1,
+                t.pricing.singleF2,
+                t.pricing.singleF3,
+                t.pricing.singleF4,
+                t.pricing.singleF5,
+                t.pricing.singleF6,
               ]}
             />
             <PricingCard
-              name="Multi"
+              name={t.pricing.multiName}
               price="$49"
-              description="For growing businesses"
+              description={t.pricing.multiDesc}
               tier="multi"
               features={[
-                "Up to 5 Google Business locations",
-                "Unlimited AI-generated replies",
-                "Custom instructions per location",
-                "Auto-reply or manual approval",
-                "CSV review import",
-                "Priority support",
+                t.pricing.multiF1,
+                t.pricing.multiF2,
+                t.pricing.multiF3,
+                t.pricing.multiF4,
+                t.pricing.multiF5,
+                t.pricing.multiF6,
               ]}
             />
             <PricingCard
-              name="Pro"
+              name={t.pricing.proName}
               price="$99"
-              description="Full GBP management suite"
+              description={t.pricing.proDesc}
               tier="pro"
               popular
               features={[
-                "Up to 5 locations",
-                "Everything in Multi, plus:",
-                "Review Shield — AI spam detection",
-                "Early-Warning Radar — performance alerts",
-                "Action Planner — weekly AI tasks",
-                "Auto-publish GBP posts",
-                "Health score & trend analytics",
-                "Priority support",
+                t.pricing.proF1,
+                t.pricing.proF2,
+                t.pricing.proF3,
+                t.pricing.proF4,
+                t.pricing.proF5,
+                t.pricing.proF6,
+                t.pricing.proF7,
+                t.pricing.proF8,
               ]}
             />
-          </div>
+          </motion.div>
 
           {/* FAQ */}
-          <div className="mt-24 max-w-2xl mx-auto">
-            <h2 className="font-display text-3xl text-foreground text-center mb-12">
-              Questions? Answers.
-            </h2>
+          <motion.div
+            className="mt-24 max-w-2xl mx-auto"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-80px" }}
+            variants={staggerContainer}
+          >
+            <motion.h2
+              className="font-display text-3xl text-foreground text-center mb-12"
+              variants={fadeUp}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {t.pricing.faqTitle}
+            </motion.h2>
             <div className="space-y-6">
               {[
-                {
-                  q: "How does the free trial work?",
-                  a: "You get full access to all features for 7 days. No credit card needed to start. If you love it, pick a plan. If not, no worries.",
-                },
-                {
-                  q: "Can I change plans later?",
-                  a: "Absolutely. Upgrade, downgrade, or cancel anytime from your billing portal. Changes take effect immediately.",
-                },
-                {
-                  q: "What's included in the Pro plan?",
-                  a: "Pro gives you three AI-powered agents: Review Shield scans every review for spam and generates flag appeals, Early-Warning Radar monitors your GBP performance daily and alerts you to drops, and Action Planner generates weekly optimization tasks with ready-to-publish post drafts.",
-                },
-                {
-                  q: "Do you need access to my Google account?",
-                  a: "We request limited OAuth access to read your reviews, post replies, monitor performance, and publish posts. We never access anything else on your Google account.",
-                },
-                {
-                  q: "What if I don't like a generated reply?",
-                  a: "Every reply can be edited before posting. You can also regenerate, skip, or adjust your custom instructions to fine-tune the AI's output.",
-                },
+                { q: t.pricing.faq1Q, a: t.pricing.faq1A },
+                { q: t.pricing.faq2Q, a: t.pricing.faq2A },
+                { q: t.pricing.faq3Q, a: t.pricing.faq3A },
+                { q: t.pricing.faq4Q, a: t.pricing.faq4A },
+                { q: t.pricing.faq5Q, a: t.pricing.faq5A },
               ].map((faq) => (
-                <div key={faq.q} className="border-b border-gray-100 pb-6">
+                <motion.div
+                  key={faq.q}
+                  className="border-b border-gray-100 pb-6"
+                  variants={fadeUp}
+                  transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                >
                   <h3 className="font-body font-semibold text-foreground mb-2">
                     {faq.q}
                   </h3>
                   <p className="text-sm text-muted-foreground font-body leading-relaxed">
                     {faq.a}
                   </p>
-                </div>
+                </motion.div>
               ))}
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>

@@ -5,9 +5,9 @@
 ---
 
 ## Current Status
-- **Last updated:** 2026-03-21 (Mac session #1)
-- **Phase:** All env vars configured, Stripe checkout tested, ready for deployment
-- **Last session:** Google OAuth fully working, Stripe configured, pricing updated, hero redesigned
+- **Last updated:** 2026-03-21 (Mac session #2)
+- **Phase:** Lead magnet built, ready for deployment
+- **Last session:** Built free GBP Health Score Audit lead magnet page at `/audit`
 - **Repo:** https://github.com/VibeCodingVince/reviewflow
 - **Build status:** Clean (`npm run build` passes)
 - **Supabase project:** `https://vdkujkrurjqklkpofpmz.supabase.co` — all 7 tables, RLS, triggers, indexes live
@@ -15,29 +15,25 @@
 - **User account:** vincentdaigle91@gmail.com — signed up via Google OAuth, upgraded to Pro tier
 - **Test business:** "Gadaxsym" (has Radar seed data), "Tim Horton" (no data)
 
-### What was done this session (2026-03-21, Mac session #1)
-1. **Google OAuth fully set up and tested:**
-   - Created Google Cloud project "ReviewFlow"
-   - Enabled Google+ API, configured consent screen, created OAuth credentials
-   - Enabled Google provider in Supabase with Client ID/Secret
-   - Added Google credentials to Mac `.env.local`
-   - Ran migration 007 manually via Supabase SQL editor (script failed — no exec_sql RPC)
-   - Tested Google OAuth signup — works correctly
-2. **Ran Radar seed script** — seeded demo data for Gadaxsym business (30 days snapshots, 4 alerts, health score 74)
-3. **Configured all env vars on Mac `.env.local`:**
-   - Supabase URL, anon key, service role key
-   - Google OAuth Client ID + Secret
-   - Anthropic API key
-   - Stripe publishable key, secret key, 3 price IDs
-   - CRON_SECRET (auto-generated)
-   - Only missing: STRIPE_WEBHOOK_SECRET (needs Vercel deployment)
-4. **Updated pricing to $19/$49/$99** (was $29/$79/$149):
-   - Researched competitors: budget tools $7-19/mo, mid-tier $49-99/mo, enterprise $249-449/mo
-   - Updated Stripe products, landing page, and pricing page
-5. **Redesigned hero headline** — "Never Miss" now has animated highlight-reveal, "Again" has gradient text with underline
-6. **Renamed "Phone Calls" to "Call Clicks"** on Radar page (more accurate — tracks GBP listing taps, not actual calls)
-7. **Added checkout success modal** — thank-you dialog on dashboard after Stripe checkout (`?checkout=success` param)
-8. **Stripe checkout tested** — successfully redirects to Stripe and back
+### What was done this session (2026-03-21, Mac session #2)
+1. **Built Free GBP Health Score Audit lead magnet** (`/audit`):
+   - Public page — no auth required. 4-state flow: search → loading → preview → full report
+   - Uses Google Places API (New) to look up businesses and score them on 5 categories (rating, review volume, photos, profile completeness, engagement) → 0-100 score with A-F grade
+   - Email-gated: preview shows score + mini category cards, full report unlocks after email with AI summary, quick wins, benchmark comparisons, detailed recommendations per category
+   - SVG animated score gauge, stagger animations, blur gate pattern
+   - Leads stored in new `leads` table via admin client
+   - API routes: `/api/audit/search` (Places proxy with rate limiting), `/api/audit/score` (details + scoring), `/api/audit/capture` (email capture)
+2. **Created `skills/lead-magnet/SKILL.md`** — reusable skill for building high-converting lead magnet pages (4-state flow, blur gate, score gauge, conversion psychology)
+3. **Migration 008 (leads table)** — run on live Supabase
+4. **Added Google Places API key** to `.env.local` — enabled Places API (New) in Google Cloud Console
+5. **Landing page integration** — added "Free Audit" nav link + CTA section on landing page and pricing page
+6. **Fixed dropdown z-index bug** — `animate-fade-in` creates stacking contexts, needed `z-10` on parent wrapper
+
+### Previous sessions (2026-03-21, Mac session #1)
+- Google OAuth fully set up and tested
+- Radar seed script run, env vars configured
+- Pricing updated to $19/$49/$99, hero redesigned
+- Checkout success modal added, Stripe checkout tested
 
 ### Previous sessions
 - 2026-03-21 (Windows): Fixed Google OAuth signup, created migration 007, updated Windows .env.local
@@ -46,9 +42,10 @@
 
 ### What needs to be done next
 **Immediate next steps:**
-1. **Set up Stripe webhook** — create endpoint in Stripe dashboard pointing to Vercel URL once deployed, add `STRIPE_WEBHOOK_SECRET` to env
-2. **Deploy to Vercel** — connect GitHub repo, add all env vars, configure cron jobs
-3. **Configure Vercel cron jobs:**
+1. **Test audit page end-to-end** — search, score, email capture, verify lead in Supabase
+2. **Set up Stripe webhook** — create endpoint in Stripe dashboard pointing to Vercel URL once deployed, add `STRIPE_WEBHOOK_SECRET` to env
+3. **Deploy to Vercel** — connect GitHub repo, add all env vars (including `GOOGLE_PLACES_API_KEY`), configure cron jobs
+4. **Configure Vercel cron jobs:**
    ```
    check-reviews:      0 */12 * * *       (every 12 hours)
    check-performance:  0 2 * * *          (daily 2 AM)
@@ -68,7 +65,13 @@
 
 ## Lessons Learned / Gotchas
 
-### 2026-03-21 additions (Mac session)
+### 2026-03-21 additions (Mac session #2)
+- **CSS stacking context + animations:** `animate-fade-in` (opacity + transform) creates isolated stacking contexts on each animated element. `z-index` on a child only works within its parent's stacking context. Fix: add `z-index` to the parent container so it elevates the entire stacking context above siblings.
+- **Google Places API (New) must be explicitly enabled:** Just having an API key isn't enough — must enable "Places API (New)" in Google Cloud Console for the project. Error is a 403 `SERVICE_DISABLED`.
+- **Places API costs:** ~$0.05 per audit (1 search + 1 details). At 1000 audits/month ≈ $52/month.
+- **Leads table uses admin client:** No RLS user policies on `leads` table — only accessed server-side via `createAdminClient()` (same pattern as cron jobs).
+
+### 2026-03-21 additions (Mac session #1)
 - **Migration script needs dotenv:** `scripts/run-migration-007.ts` doesn't load `.env.local` automatically. Need `export $(grep -v '^#' .env.local | xargs)` prefix, OR run SQL manually in Supabase dashboard.
 - **Supabase has no exec_sql RPC:** Can't execute raw SQL via Supabase client. For migrations, run SQL directly in Supabase SQL editor.
 - **Radar seed data per-business:** Seed script creates data for "Gadaxsym" business, not all businesses. If user selects a different business in the dropdown, data appears empty.

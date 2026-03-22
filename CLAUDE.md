@@ -25,8 +25,10 @@ src/
 │   │   ├── planner/         # Action Planner + posts subpage (Pro)
 │   │   ├── settings/        # Settings with Pro feature toggles
 │   │   └── layout.tsx       # Dashboard layout with nav, trial banner, alert bell
+│   ├── audit/               # Free GBP Health Score Audit (public lead magnet)
 │   ├── api/
 │   │   ├── auth/            # Supabase + Google OAuth callbacks
+│   │   ├── audit/           # search, score, capture (public, no auth)
 │   │   ├── reviews/         # pull, generate-reply, generate-bulk, post-reply, update-status, import-csv, analyze-spam, generate-flag-narrative
 │   │   ├── stripe/          # checkout, webhook, portal
 │   │   ├── cron/            # check-reviews, check-performance, generate-tasks, publish-posts
@@ -42,13 +44,14 @@ src/
 │   ├── supabase/            # client.ts, server.ts, admin.ts
 │   ├── subscription.ts      # isSubscriptionActive(), requireActiveSubscription(), requireFeatureAccess()
 │   ├── spam-analysis.ts     # analyzeSpam() — Claude-powered spam detection (shared by routes + cron)
+│   ├── audit-score.ts       # computeAuditScore() — public GBP health scoring (used by audit routes)
 │   ├── stripe.ts            # Lazy-initialized Stripe client (getStripe())
 │   ├── google.ts            # Google Business Profile API helpers (reviews, performance, posts)
 │   ├── types.ts             # TypeScript types for all DB entities
 │   └── utils.ts             # cn() utility
 ├── middleware.ts             # Auth protection for /dashboard, /settings
-skills/                      # Design and architecture skill files
-supabase/migrations/         # SQL schema with RLS policies (001-006)
+skills/                      # Design, architecture, and lead magnet skill files
+supabase/migrations/         # SQL schema with RLS policies (001-008)
 ```
 
 ## Key Patterns
@@ -68,6 +71,9 @@ supabase/migrations/         # SQL schema with RLS policies (001-006)
 - **Feature gate** (`requireFeatureAccess()`): checks subscription is active AND tier='pro'. Returns 403 with `FEATURE_REQUIRED` code. Applied to all new Pro routes (analyze-spam, generate-flag-narrative, alerts, performance, tasks, posts).
 - **Shared spam analysis** (`src/lib/spam-analysis.ts`): Extracted from route file because Next.js route files can only export HTTP handlers. Used by analyze-spam route, cron/check-reviews, and reviews/pull.
 - **Cron pattern**: All crons use CRON_SECRET bearer auth, createAdminClient(), isSubscriptionActive() + tier check per business, 200ms rate limiting.
+- **Public API routes** (`/api/audit/*`): No auth required. Use in-memory rate limiting. Proxy Google Places API to keep key server-side. Use `createAdminClient()` for DB writes (leads table).
+- **Lead magnet pattern** (`/audit`): 4-state client component (search → loading → preview → full). Preview shows score + mini cards, gates detailed recommendations behind email. Follow `skills/lead-magnet/SKILL.md` for conversion patterns.
+- **CSS stacking context gotcha**: Elements with `animate-fade-in` (uses opacity + transform) create isolated stacking contexts. When dropdown menus need to render above sibling animated elements, add explicit `z-index` to the dropdown's parent container, not just the dropdown itself.
 
 ## Database Tables
 - `users` — linked to auth.users, has stripe_customer_id, subscription_status/tier (single/multi/pro), trial_end
@@ -77,6 +83,7 @@ supabase/migrations/         # SQL schema with RLS policies (001-006)
 - `alerts` — AI-generated alerts with type, severity, title, description, recommendations, metric deltas, read/dismissed state
 - `optimization_tasks` — weekly AI tasks with type, priority, title, description, ai_draft, status, impact_note, week_of
 - `gbp_posts` — published posts tracking with google_post_id, post_type, summary, CTA, status, views, clicks
+- `leads` — email captures from audit tool with business_name, place_id, score, score_breakdown, source, converted flag
 
 ## Migrations
 - `001_initial_schema.sql` — Base schema with users, businesses, reviews + RLS
@@ -86,6 +93,7 @@ supabase/migrations/         # SQL schema with RLS policies (001-006)
 - `005_action_planner.sql` — optimization_tasks + gbp_posts tables + RLS + action_planner_enabled on businesses
 - `006_pro_tier.sql` — Adds 'pro' to subscription_tier constraint
 - `007_fix_google_oauth.sql` — Fixes handle_new_user() trigger to properly extract name from Google OAuth metadata (uses `name` field, falls back to email username)
+- `008_leads.sql` — Lead capture table for audit tool (RLS enabled, no user policies — server-only via admin client)
 
 ## 3 AI Agent Features (Pro Tier)
 
@@ -122,6 +130,7 @@ supabase/migrations/         # SQL schema with RLS policies (001-006)
 - **Utility classes:** `.font-display`, `.font-body`, `.grain-overlay`, `.stagger-1` through `.stagger-6`
 - Follow `skills/frontend-design/SKILL.md` for all UI work
 - Follow `skills/saas-architecture/SKILL.md` for all backend work
+- Follow `skills/lead-magnet/SKILL.md` for lead magnet / conversion pages
 
 ## Pricing Tiers
 - Single: $19/mo — 1 location, review replies only
@@ -133,7 +142,8 @@ supabase/migrations/         # SQL schema with RLS policies (001-006)
 - **Project URL:** `https://vdkujkrurjqklkpofpmz.supabase.co`
 - **Migrations 001–006** have been run on the live Supabase project (as of 2026-03-20)
 - **Migration 007** has been run on the live Supabase project (as of 2026-03-21)
-- Database is fully provisioned: all 7 tables, RLS policies, triggers, indexes
+- **Migration 008** has been run on the live Supabase project (as of 2026-03-21)
+- Database is fully provisioned: all 8 tables, RLS policies, triggers, indexes
 
 ## Environment Variables
 See `.env.example` for all required vars. `.env.local` exists with credentials configured (gitignored).
@@ -144,6 +154,7 @@ See `.env.example` for all required vars. `.env.local` exists with credentials c
 - ✅ Anthropic API key
 - ✅ Stripe keys (publishable + secret) and price IDs (Single/Multi/Pro)
 - ✅ CRON_SECRET
+- ✅ Google Places API key (for audit lead magnet)
 - ❌ Still needed: `STRIPE_WEBHOOK_SECRET` (set up when deploying to Vercel)
 
 ## Commands
