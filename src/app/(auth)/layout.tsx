@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MessageSquareText } from "lucide-react";
+import { Logo } from "@/components/logo";
 
 export default function AuthLayout({
   children,
@@ -11,12 +11,7 @@ export default function AuthLayout({
       {/* Minimal nav */}
       <nav className="h-16 flex items-center px-6">
         <Link href="/" className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <MessageSquareText className="w-4.5 h-4.5 text-white" />
-          </div>
-          <span className="font-display text-xl text-foreground">
-            ReviewFlow
-          </span>
+          <Logo />
         </Link>
       </nav>
 

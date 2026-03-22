@@ -195,7 +195,7 @@ export default function DashboardPage() {
               <DialogTitle className="font-display text-2xl text-center">Welcome aboard!</DialogTitle>
             </DialogHeader>
             <p className="text-muted-foreground font-body mt-2 leading-relaxed">
-              Thank you for supporting us and believing in ReviewFlow. Your subscription is now active — let&apos;s grow your business together.
+              Thank you for supporting us and believing in RankClerk. Your subscription is now active — let&apos;s grow your business together.
             </p>
             <div className="flex items-center gap-1.5 mt-4 text-sm text-primary font-body font-medium">
               <Heart className="w-4 h-4" />

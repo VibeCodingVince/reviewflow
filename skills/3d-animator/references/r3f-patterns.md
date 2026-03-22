@@ -40,7 +40,7 @@ function FloatingShape() {
       <mesh ref={meshRef} scale={2}>
         <icosahedronGeometry args={[1, 4]} />
         <MeshDistortMaterial
-          color="#1B4332"
+          color="#0F1D2F"
           roughness={0.15}
           metalness={0.9}
           distort={0.25}
@@ -101,7 +101,7 @@ function ParticleField({ count = 300 }: { count?: number }) {
       </bufferGeometry>
       <pointsMaterial
         size={0.03}
-        color="#1B4332"
+        color="#0F1D2F"
         transparent
         opacity={0.6}
         sizeAttenuation
@@ -128,7 +128,7 @@ import { useFrame } from "@react-three/fiber";
 import { MeshDistortMaterial } from "@react-three/drei";
 import type { Mesh } from "three";
 
-function GradientBlob({ color = "#1B4332", speed = 2 }) {
+function GradientBlob({ color = "#0F1D2F", speed = 2 }) {
   const meshRef = useRef<Mesh>(null);
 
   useFrame((state) => {
@@ -192,7 +192,7 @@ function MouseTracker() {
       <mesh ref={meshRef}>
         <dodecahedronGeometry args={[1, 0]} />
         <meshStandardMaterial
-          color="#1B4332"
+          color="#0F1D2F"
           wireframe
           transparent
           opacity={0.3}
@@ -337,7 +337,7 @@ function ScrollScene({ progress }: { progress: number }) {
   return (
     <mesh ref={meshRef}>
       <torusKnotGeometry args={[1, 0.3, 128, 32]} />
-      <meshStandardMaterial color="#1B4332" />
+      <meshStandardMaterial color="#0F1D2F" />
     </mesh>
   );
 }

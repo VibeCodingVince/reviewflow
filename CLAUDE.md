@@ -1,4 +1,4 @@
-# ReviewFlow — AI-Powered GBP Management Platform
+# RankClerk — AI-Powered GBP Management Platform
 
 ## Project Overview
 A full-stack SaaS app that manages Google Business Profiles with AI. Started as a review auto-responder, now expanded to a full GBP management platform with 3 AI agent features. Built with Next.js 14 (App Router), Supabase, Stripe, and the Anthropic SDK.
@@ -13,7 +13,7 @@ A full-stack SaaS app that manages Google Business Profiles with AI. Started as 
 - **Payments:** Stripe (Checkout, Webhooks, Customer Portal)
 - **AI:** Anthropic Claude (claude-sonnet-4-20250514) for reply generation, spam analysis, alerts, and task generation
 - **i18n:** Custom context-based system (`src/lib/i18n/`) — EN/FR with localStorage persistence
-- **Fonts:** DM Serif Display (headings) + Outfit (body) via Google Fonts
+- **Fonts:** Instrument Serif (headings) + Inter (body) via Google Fonts
 - **Icons:** lucide-react
 
 ## Project Structure
@@ -40,7 +40,10 @@ src/
 │   │   └── posts/           # GET posts, POST publish (Planner)
 │   ├── pricing/             # Pricing page (3 tiers: Single, Multi, Pro)
 │   └── page.tsx             # Landing page
-├── components/ui/           # shadcn/ui components
+├── components/
+│   ├── ui/                  # shadcn/ui components
+│   ├── logo.tsx             # Shared Logo + LogoMark components (RankClerk brand)
+│   └── language-toggle.tsx  # EN | FR language switcher
 ├── hooks/                   # use-toast
 ├── lib/
 │   ├── supabase/            # client.ts, server.ts, admin.ts
@@ -79,6 +82,8 @@ supabase/migrations/         # SQL schema with RLS policies (001-008)
 - **i18n system** (`src/lib/i18n/`): Custom React context + `useI18n()` hook. Translations in `translations.ts` (EN/FR). `I18nProvider` wraps app in `layout.tsx`. Language persists in localStorage. `LanguageToggle` component shows `EN | FR` in nav bars. All public pages (landing, pricing, audit, login, signup) are fully translated.
 - **Framer Motion** (`motion/react`): All public pages use Framer Motion instead of CSS animations. Patterns: `fadeUp` variants with `whileInView` for scroll reveals, `staggerContainer` for grids, spring `whileHover`/`whileTap` on buttons and cards. Import from `motion/react` (NOT `framer-motion`). All animated components must be `"use client"`.
 - **Hero device mockups**: Landing page hero shows a MacBook with dashboard UI + iPhone overlay with notifications/health score. Both float with `animate={{ y: [0, -8, 0] }}`. Performance chart bars animate in sequentially.
+- **Logo component** (`src/components/logo.tsx`): Shared `Logo` (icon + wordmark) and `LogoMark` (icon only) components. Used in all nav bars, footers, and auth pages. Inline SVG of ascending bars + checkmark. Accepts `size` prop ("sm" | "default").
+- **Gold color token**: Custom `--gold` CSS variable + Tailwind `gold` color for the brand accent. Use `text-gold`, `bg-gold`, etc. The `--accent` variable is kept as a subtle warm tint for shadcn/ui hover states (not gold).
 - **CSS stacking context gotcha**: Elements with `animate-fade-in` (uses opacity + transform) create isolated stacking contexts. When dropdown menus need to render above sibling animated elements, add explicit `z-index` to the dropdown's parent container, not just the dropdown itself.
 
 ## Database Tables
@@ -130,7 +135,7 @@ supabase/migrations/         # SQL schema with RLS policies (001-008)
 | publish-posts | `/api/cron/publish-posts` | Every 12 hours |
 
 ## Design System
-- **Brand primary:** Dark green `#1B4332` (HSL: 153 46% 18%)
+- **Brand primary:** Dark navy `#0F1D2F` (HSL: 215 52% 12%), **Gold accent:** `#D4952A`
 - **Style:** Premium/editorial, not corporate. White bg, light gray accents
 - **Animations:** Framer Motion (`motion/react`) for all public pages. Tailwind keyframes still available for dashboard.
 - **Utility classes:** `.font-display`, `.font-body`, `.grain-overlay`, `.stagger-1` through `.stagger-6`

@@ -98,8 +98,8 @@ The reveal. Everything un-blurs with a smooth transition (`transition: filter 0.
 ## Visual Design System
 
 ### Typography
-- **Headlines**: Display serif font (DM Serif Display or similar). Large, confident, editorial.
-- **Body/UI**: Clean sans-serif (Outfit, or similar). Light/regular weight for body, medium/semibold for labels.
+- **Headlines**: Display serif font (Instrument Serif or similar). Large, confident, editorial.
+- **Body/UI**: Clean sans-serif (Inter, or similar). Light/regular weight for body, medium/semibold for labels.
 - **Score numbers**: Display font at oversized scale (4xl-6xl). The score should be the largest text on the page.
 
 ### Color

@@ -1,13 +1,13 @@
-# ReviewFlow — Shared Memory (Cross-Machine)
+# RankClerk — Shared Memory (Cross-Machine)
 
 > **This file is the shared brain.** On any new machine or session, tell Claude: "read shared-memory.md" to restore full context.
 
 ---
 
 ## Current Status
-- **Last updated:** 2026-03-22 (Mac session #3)
-- **Phase:** i18n + animations complete, ready for deployment
-- **Last session:** Added FR/EN i18n, Framer Motion animations, device mockup hero
+- **Last updated:** 2026-03-22 (Mac session #4)
+- **Phase:** Rebrand complete, ready for deployment
+- **Last session:** Full rebrand from ReviewFlow → RankClerk
 - **Repo:** https://github.com/VibeCodingVince/reviewflow
 - **Build status:** Clean (`npm run build` passes)
 - **Supabase project:** `https://vdkujkrurjqklkpofpmz.supabase.co` — all 8 tables, RLS, triggers, indexes live
@@ -15,7 +15,20 @@
 - **User account:** vincentdaigle91@gmail.com — signed up via Google OAuth, upgraded to Pro tier
 - **Test business:** "Gadaxsym" (has Radar seed data), "Tim Horton" (no data)
 
-### What was done this session (2026-03-22, Mac session #3)
+### What was done this session (2026-03-22, Mac session #4)
+1. **Full rebrand: ReviewFlow → RankClerk**
+   - New color palette: Navy `#0F1D2F` primary + Gold `#D4952A` accent (was dark green `#1B4332`)
+   - New fonts: Instrument Serif (headings) + Inter (body) — replaced DM Serif Display + Outfit
+   - New logo: Ascending bars + checkmark SVG (represents rankings going up + tasks handled)
+   - Created shared `Logo` component at `src/components/logo.tsx` — replaced 6 inline logo instances
+   - Added `--gold` CSS variable + Tailwind `gold` color token
+   - Updated all 15+ "ReviewFlow" text occurrences across source files
+   - Updated favicon.svg with new logo mark
+   - Updated SEO metadata, translations (EN/FR), audit recommendations
+   - Updated all documentation: CLAUDE.md, shared-memory.md, 4 skill files
+   - Build passes (zero TypeScript errors)
+
+### What was done in session (2026-03-22, Mac session #3)
 1. **Full i18n system (FR/EN):**
    - Custom React context (`src/lib/i18n/context.tsx`) + translations file (`translations.ts`)
    - `I18nProvider` wraps app in root layout, `useI18n()` hook in all pages
@@ -138,7 +151,7 @@
 - Three Supabase clients: browser (client.ts), server (server.ts), admin (admin.ts)
 - RLS enforces data isolation — reviews/alerts/tasks/posts accessed through business ownership
 - Claude AI model used: `claude-sonnet-4-20250514` for all AI features
-- Design system: DM Serif Display + Outfit fonts, dark green #1B4332 primary, premium/editorial style
+- Design system: Instrument Serif + Inter fonts, dark navy #0F1D2F primary + gold #D4952A accent, premium/editorial style
 - Skills files in `skills/` directory guide all UI and backend decisions
 - Dashboard layout is a client component that fetches user data for trial banner + alert count
 - Feature toggles are per-business (review_shield_enabled, radar_enabled, action_planner_enabled)

@@ -224,7 +224,7 @@ function Scene() {
       <Float speed={2} rotationIntensity={0.5} floatIntensity={1}>
         <mesh>
           <torusKnotGeometry args={[1, 0.3, 128, 32]} />
-          <meshStandardMaterial color="#1B4332" roughness={0.2} metalness={0.8} />
+          <meshStandardMaterial color="#0F1D2F" roughness={0.2} metalness={0.8} />
         </mesh>
       </Float>
     </>

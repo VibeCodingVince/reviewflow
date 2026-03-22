@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import {
-  MessageSquareText,
   Mic2,
   MapPin,
   Star,
@@ -17,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n/context";
 import { LanguageToggle } from "@/components/language-toggle";
+import { Logo } from "@/components/logo";
 import { motion } from "motion/react";
 
 // ---- Animation Variants ----
@@ -95,9 +95,13 @@ function DashboardMockup() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
-                    <MessageSquareText className="w-3 h-3 text-white" />
+                    <svg viewBox="0 0 24 24" fill="none" className="w-3 h-3 text-white">
+                      <rect x="2" y="14" width="5" height="8" rx="1.5" fill="currentColor" opacity="0.6" />
+                      <rect x="9.5" y="9" width="5" height="13" rx="1.5" fill="currentColor" opacity="0.8" />
+                      <rect x="17" y="4" width="5" height="18" rx="1.5" fill="currentColor" />
+                    </svg>
                   </div>
-                  <span className="font-display text-xs text-foreground">ReviewFlow</span>
+                  <span className="font-display text-xs text-foreground">RankClerk</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
@@ -215,10 +219,14 @@ function DashboardMockup() {
               {/* App header */}
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center">
-                  <MessageSquareText className="w-3.5 h-3.5 text-white" />
+                  <svg viewBox="0 0 24 24" fill="none" className="w-3.5 h-3.5 text-white">
+                    <rect x="2" y="14" width="5" height="8" rx="1.5" fill="currentColor" opacity="0.6" />
+                    <rect x="9.5" y="9" width="5" height="13" rx="1.5" fill="currentColor" opacity="0.8" />
+                    <rect x="17" y="4" width="5" height="18" rx="1.5" fill="currentColor" />
+                  </svg>
                 </div>
                 <div>
-                  <span className="font-display text-[11px] text-foreground leading-none">ReviewFlow</span>
+                  <span className="font-display text-[11px] text-foreground leading-none">RankClerk</span>
                   <p className="text-[7px] text-muted-foreground font-body">Dashboard</p>
                 </div>
               </div>
@@ -451,12 +459,7 @@ export default function LandingPage() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100/50">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <MessageSquareText className="w-4.5 h-4.5 text-white" />
-            </div>
-            <span className="font-display text-xl text-foreground">
-              ReviewFlow
-            </span>
+            <Logo />
           </Link>
           <div className="hidden md:flex items-center gap-8">
             <a
@@ -939,14 +942,7 @@ export default function LandingPage() {
       <footer className="border-t border-gray-100 py-12">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center">
-                <MessageSquareText className="w-3.5 h-3.5 text-white" />
-              </div>
-              <span className="font-display text-lg text-foreground">
-                ReviewFlow
-              </span>
-            </div>
+            <Logo size="sm" />
             <div className="flex items-center gap-8">
               <a
                 href="#features"

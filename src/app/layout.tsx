@@ -4,13 +4,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { I18nProvider } from "@/lib/i18n/context";
 
 export const metadata: Metadata = {
-  title: "ReviewFlow — AI-Powered Google Review Responses",
+  title: "RankClerk — AI-Powered GBP Management",
   description:
-    "Never miss a Google review again. AI-generated, brand-voice replies posted automatically.",
+    "Your AI clerk manages your Google Business Profile 24/7. Automated review replies, fake review detection, performance monitoring, and weekly optimization.",
   openGraph: {
-    title: "ReviewFlow — AI-Powered Google Review Responses",
+    title: "RankClerk — AI-Powered GBP Management",
     description:
-      "Never miss a Google review again. AI-generated, brand-voice replies posted automatically.",
+      "Your AI clerk manages your Google Business Profile 24/7. Automated review replies, fake review detection, performance monitoring, and weekly optimization.",
     type: "website",
   },
 };

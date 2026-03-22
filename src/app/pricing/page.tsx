@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button";
 import {
   Check,
   ArrowRight,
-  MessageSquareText,
 } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/context";
 import { LanguageToggle } from "@/components/language-toggle";
+import { Logo } from "@/components/logo";
 import { motion } from "motion/react";
 
 const fadeUp = {
@@ -158,12 +158,7 @@ export default function PricingPage() {
       {/* Nav */}
       <nav className="h-16 flex items-center justify-between px-6 max-w-7xl mx-auto">
         <Link href="/" className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <MessageSquareText className="w-4.5 h-4.5 text-white" />
-          </div>
-          <span className="font-display text-xl text-foreground">
-            ReviewFlow
-          </span>
+          <Logo />
         </Link>
         <div className="flex items-center gap-4">
           <Link

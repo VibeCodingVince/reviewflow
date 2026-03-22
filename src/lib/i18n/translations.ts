@@ -248,7 +248,7 @@ export const translations = {
 
     // Footer
     footer: {
-      rights: "© 2024 ReviewFlow. All rights reserved.",
+      rights: "© 2024 RankClerk. All rights reserved.",
     },
   },
 
@@ -502,7 +502,7 @@ export const translations = {
 
     // Footer
     footer: {
-      rights: "© 2024 ReviewFlow. Tous droits réservés.",
+      rights: "© 2024 RankClerk. Tous droits réservés.",
     },
   },
 } as const;

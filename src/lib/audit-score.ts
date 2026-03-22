@@ -294,11 +294,11 @@ function scoreEngagement(place: PlaceData): CategoryScore {
     score += 4;
     parts.push("moderate engagement");
     recommendations.push(
-      "Respond to every review — Google rewards businesses that actively engage with customers. ReviewFlow can automate this with AI replies that match your brand voice"
+      "Respond to every review — Google rewards businesses that actively engage with customers. RankClerk can automate this with AI replies that match your brand voice"
     );
   } else {
     recommendations.push(
-      "Responding to all reviews (positive and negative) is one of the easiest ways to boost your ranking. ReviewFlow automates this with AI-powered replies"
+      "Responding to all reviews (positive and negative) is one of the easiest ways to boost your ranking. RankClerk automates this with AI-powered replies"
     );
   }
 

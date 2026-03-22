@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
-  MessageSquareText,
   LayoutDashboard,
   Settings,
   LogOut,
@@ -19,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { User } from "@/lib/types";
+import { Logo } from "@/components/logo";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -52,7 +52,7 @@ function TrialBanner({ user }: { user: User }) {
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0" />
             <p className="text-sm font-body text-red-800">
-              Your free trial has ended. Subscribe to continue using ReviewFlow.
+              Your free trial has ended. Subscribe to continue using RankClerk.
             </p>
           </div>
           <Link href="/pricing">
@@ -179,12 +179,7 @@ export default function DashboardLayout({
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-b border-gray-100/80 h-16">
         <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
           <Link href="/dashboard" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <MessageSquareText className="w-4.5 h-4.5 text-white" />
-            </div>
-            <span className="font-display text-xl text-foreground">
-              ReviewFlow
-            </span>
+            <Logo />
           </Link>
 
           <div className="flex items-center gap-1">

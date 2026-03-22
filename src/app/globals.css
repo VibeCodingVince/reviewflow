@@ -2,29 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap');
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 150 40% 10%;
+    --background: 40 33% 97%;
+    --foreground: 215 52% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 150 40% 10%;
+    --card-foreground: 215 52% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 150 40% 10%;
-    --primary: 153 46% 18%;
+    --popover-foreground: 215 52% 12%;
+    --primary: 215 52% 12%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 150 10% 95%;
-    --secondary-foreground: 150 40% 10%;
-    --muted: 150 10% 95%;
-    --muted-foreground: 150 5% 45%;
-    --accent: 150 10% 93%;
-    --accent-foreground: 150 40% 10%;
+    --secondary: 40 20% 95%;
+    --secondary-foreground: 215 52% 12%;
+    --muted: 215 16% 93%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 40 20% 93%;
+    --accent-foreground: 215 52% 12%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 150 10% 90%;
-    --input: 150 10% 90%;
-    --ring: 153 46% 18%;
+    --border: 215 10% 90%;
+    --input: 215 10% 90%;
+    --ring: 37 67% 50%;
+    --gold: 37 67% 50%;
+    --gold-foreground: 0 0% 100%;
     --radius: 0.625rem;
   }
 
@@ -34,11 +36,11 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Inter', sans-serif;
   }
 
   h1, h2, h3, h4 {
-    font-family: 'DM Serif Display', serif;
+    font-family: 'Instrument Serif', serif;
   }
 }
 
@@ -48,11 +50,11 @@
   }
 
   .font-display {
-    font-family: 'DM Serif Display', serif;
+    font-family: 'Instrument Serif', serif;
   }
 
   .font-body {
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Inter', sans-serif;
   }
 
   .grain-overlay {
