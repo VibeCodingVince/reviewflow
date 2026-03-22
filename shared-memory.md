@@ -5,29 +5,49 @@
 ---
 
 ## Current Status
-- **Last updated:** 2026-03-21 (Mac session #2)
-- **Phase:** Lead magnet built, ready for deployment
-- **Last session:** Built free GBP Health Score Audit lead magnet page at `/audit`
+- **Last updated:** 2026-03-22 (Mac session #3)
+- **Phase:** i18n + animations complete, ready for deployment
+- **Last session:** Added FR/EN i18n, Framer Motion animations, device mockup hero
 - **Repo:** https://github.com/VibeCodingVince/reviewflow
 - **Build status:** Clean (`npm run build` passes)
-- **Supabase project:** `https://vdkujkrurjqklkpofpmz.supabase.co` — all 7 tables, RLS, triggers, indexes live
+- **Supabase project:** `https://vdkujkrurjqklkpofpmz.supabase.co` — all 8 tables, RLS, triggers, indexes live
 - **Dev server:** Running on Mac at http://localhost:3000 (or 3001 if port conflict)
 - **User account:** vincentdaigle91@gmail.com — signed up via Google OAuth, upgraded to Pro tier
 - **Test business:** "Gadaxsym" (has Radar seed data), "Tim Horton" (no data)
 
-### What was done this session (2026-03-21, Mac session #2)
-1. **Built Free GBP Health Score Audit lead magnet** (`/audit`):
-   - Public page — no auth required. 4-state flow: search → loading → preview → full report
-   - Uses Google Places API (New) to look up businesses and score them on 5 categories (rating, review volume, photos, profile completeness, engagement) → 0-100 score with A-F grade
-   - Email-gated: preview shows score + mini category cards, full report unlocks after email with AI summary, quick wins, benchmark comparisons, detailed recommendations per category
-   - SVG animated score gauge, stagger animations, blur gate pattern
-   - Leads stored in new `leads` table via admin client
-   - API routes: `/api/audit/search` (Places proxy with rate limiting), `/api/audit/score` (details + scoring), `/api/audit/capture` (email capture)
-2. **Created `skills/lead-magnet/SKILL.md`** — reusable skill for building high-converting lead magnet pages (4-state flow, blur gate, score gauge, conversion psychology)
-3. **Migration 008 (leads table)** — run on live Supabase
-4. **Added Google Places API key** to `.env.local` — enabled Places API (New) in Google Cloud Console
-5. **Landing page integration** — added "Free Audit" nav link + CTA section on landing page and pricing page
-6. **Fixed dropdown z-index bug** — `animate-fade-in` creates stacking contexts, needed `z-10` on parent wrapper
+### What was done this session (2026-03-22, Mac session #3)
+1. **Full i18n system (FR/EN):**
+   - Custom React context (`src/lib/i18n/context.tsx`) + translations file (`translations.ts`)
+   - `I18nProvider` wraps app in root layout, `useI18n()` hook in all pages
+   - `LanguageToggle` component (EN | FR button) in nav bars on landing, pricing, and audit pages
+   - Language persists via localStorage
+   - All public pages fully translated: landing, pricing, audit, login, signup
+2. **Framer Motion animations across all public pages:**
+   - Replaced all CSS `opacity-0 animate-fade-in stagger-*` with Framer Motion variants
+   - Landing: staggered hero entrance, scroll-triggered features/testimonials/pricing, spring hover on cards and buttons
+   - Pricing: staggered card reveals, FAQ reveals, spring button interactions
+   - Audit: search fade-in, loading scale-in, scroll-triggered results sections
+   - Auth pages: form card scale-in, button hover/tap springs
+3. **Hero redesign with device mockups:**
+   - MacBook mockup with realistic browser chrome (traffic lights, address bar) showing dashboard UI (stats, review with AI reply, animated performance chart)
+   - iPhone overlay floating bottom-right with Dynamic Island, iOS status bar, notification card, health score with animated progress bar
+   - Both devices float with independent bobbing animations
+   - Glow gradient behind MacBook for depth
+4. **Hero copy iterations:**
+   - Started with FOMO angle ("Every Unanswered Review Is Costing You Customers") — user didn't like fear-based approach
+   - Pivoted to supportive outcome-driven: "Turn Every Review Into a 5-Star Reputation"
+   - Stats bar: 4.6 avg rating in 90 days / 2min setup / 24/7 coverage
+   - Bottom CTA: "Your Best Reviews Are Still Ahead of You"
+5. **Created 3d-animator skill** (`skills/3d-animator/SKILL.md`) — Framer Motion + React Three Fiber patterns, general purpose
+6. **Installed `motion` package** (Framer Motion)
+
+### What was done in session (2026-03-21, Mac session #2)
+1. Built Free GBP Health Score Audit lead magnet (`/audit`)
+2. Created `skills/lead-magnet/SKILL.md`
+3. Migration 008 (leads table) — run on live Supabase
+4. Added Google Places API key to `.env.local`
+5. Landing page integration — added "Free Audit" nav link + CTA section
+6. Fixed dropdown z-index bug
 
 ### Previous sessions (2026-03-21, Mac session #1)
 - Google OAuth fully set up and tested
@@ -42,28 +62,37 @@
 
 ### What needs to be done next
 **Immediate next steps:**
-1. **Test audit page end-to-end** — search, score, email capture, verify lead in Supabase
-2. **Set up Stripe webhook** — create endpoint in Stripe dashboard pointing to Vercel URL once deployed, add `STRIPE_WEBHOOK_SECRET` to env
-3. **Deploy to Vercel** — connect GitHub repo, add all env vars (including `GOOGLE_PLACES_API_KEY`), configure cron jobs
-4. **Configure Vercel cron jobs:**
+1. **Apply animations to dashboard pages** — currently only public pages have Framer Motion
+2. **Test audit page end-to-end** — search, score, email capture, verify lead in Supabase
+3. **Set up Stripe webhook** — create endpoint in Stripe dashboard pointing to Vercel URL once deployed, add `STRIPE_WEBHOOK_SECRET` to env
+4. **Deploy to Vercel** — connect GitHub repo, add all env vars (including `GOOGLE_PLACES_API_KEY`), configure cron jobs
+5. **Configure Vercel cron jobs:**
    ```
    check-reviews:      0 */12 * * *       (every 12 hours)
    check-performance:  0 2 * * *          (daily 2 AM)
    generate-tasks:     0 6 * * 1          (weekly Monday 6 AM)
    publish-posts:      0 */12 * * *       (every 12 hours)
    ```
-4. **Connect real Google Business Profile** — enable GBP API in Google Cloud Console, connect a real listing
-5. **Test end-to-end flows** — add business, connect Google, pull reviews, generate AI replies, Pro features
+6. **Connect real Google Business Profile** — enable GBP API in Google Cloud Console, connect a real listing
+7. **Test end-to-end flows** — add business, connect Google, pull reviews, generate AI replies, Pro features
 
 **Polish items:**
+- Translate dashboard pages (currently only public pages have i18n)
 - Frontend subscription gate UX — handle `FEATURE_REQUIRED` 403 responses (show upgrade prompt)
 - CSV import validation improvements
 - Duplicate `connectGoogle()` helper — extract to shared util
 - Error boundaries on dashboard pages
 - Loading state flash on trial banner
-- Consider making cron frequency configurable per business tier
+- Mobile responsive testing for device mockups in hero
 
 ## Lessons Learned / Gotchas
+
+### 2026-03-22 additions (Mac session #3)
+- **Framer Motion import path:** Use `motion/react` (NOT `framer-motion`) for Next.js App Router compatibility.
+- **Framer Motion ease typing:** When extracting ease curves to a const, type as `[number, number, number, number]` or it fails type checking with Framer Motion's `Easing` type.
+- **i18n `as const` typing:** Using `as const` on translations makes literal string types (e.g., `"Features"` not `string`). Need `DeepStringify` type helper to widen back to `string` so both EN and FR translations are assignable.
+- **Hero copy preference:** User strongly prefers supportive, outcome-driven messaging over FOMO/fear-based copy. "Turn Every Review Into a 5-Star Reputation" > "Every Unanswered Review Is Costing You Customers". Avoid scare tactics.
+- **Stats should be fact-checkable:** User asked to verify stat claims. Softened from hard percentages to defensible claims (2x trust from Google/Ipsos, $0.03/hr from real math).
 
 ### 2026-03-21 additions (Mac session #2)
 - **CSS stacking context + animations:** `animate-fade-in` (opacity + transform) creates isolated stacking contexts on each animated element. `z-index` on a child only works within its parent's stacking context. Fix: add `z-index` to the parent container so it elevates the entire stacking context above siblings.

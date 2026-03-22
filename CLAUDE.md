@@ -8,9 +8,11 @@ A full-stack SaaS app that manages Google Business Profiles with AI. Started as 
 ## Tech Stack
 - **Framework:** Next.js 14 (App Router, TypeScript strict mode)
 - **Styling:** Tailwind CSS + shadcn/ui components
+- **Animations:** Framer Motion (`motion/react`) — scroll reveals, stagger, spring hover/tap
 - **Database & Auth:** Supabase (PostgreSQL + Auth + RLS)
 - **Payments:** Stripe (Checkout, Webhooks, Customer Portal)
 - **AI:** Anthropic Claude (claude-sonnet-4-20250514) for reply generation, spam analysis, alerts, and task generation
+- **i18n:** Custom context-based system (`src/lib/i18n/`) — EN/FR with localStorage persistence
 - **Fonts:** DM Serif Display (headings) + Outfit (body) via Google Fonts
 - **Icons:** lucide-react
 
@@ -42,6 +44,7 @@ src/
 ├── hooks/                   # use-toast
 ├── lib/
 │   ├── supabase/            # client.ts, server.ts, admin.ts
+│   ├── i18n/                # context.tsx (I18nProvider + useI18n hook), translations.ts (EN/FR)
 │   ├── subscription.ts      # isSubscriptionActive(), requireActiveSubscription(), requireFeatureAccess()
 │   ├── spam-analysis.ts     # analyzeSpam() — Claude-powered spam detection (shared by routes + cron)
 │   ├── audit-score.ts       # computeAuditScore() — public GBP health scoring (used by audit routes)
@@ -73,6 +76,9 @@ supabase/migrations/         # SQL schema with RLS policies (001-008)
 - **Cron pattern**: All crons use CRON_SECRET bearer auth, createAdminClient(), isSubscriptionActive() + tier check per business, 200ms rate limiting.
 - **Public API routes** (`/api/audit/*`): No auth required. Use in-memory rate limiting. Proxy Google Places API to keep key server-side. Use `createAdminClient()` for DB writes (leads table).
 - **Lead magnet pattern** (`/audit`): 4-state client component (search → loading → preview → full). Preview shows score + mini cards, gates detailed recommendations behind email. Follow `skills/lead-magnet/SKILL.md` for conversion patterns.
+- **i18n system** (`src/lib/i18n/`): Custom React context + `useI18n()` hook. Translations in `translations.ts` (EN/FR). `I18nProvider` wraps app in `layout.tsx`. Language persists in localStorage. `LanguageToggle` component shows `EN | FR` in nav bars. All public pages (landing, pricing, audit, login, signup) are fully translated.
+- **Framer Motion** (`motion/react`): All public pages use Framer Motion instead of CSS animations. Patterns: `fadeUp` variants with `whileInView` for scroll reveals, `staggerContainer` for grids, spring `whileHover`/`whileTap` on buttons and cards. Import from `motion/react` (NOT `framer-motion`). All animated components must be `"use client"`.
+- **Hero device mockups**: Landing page hero shows a MacBook with dashboard UI + iPhone overlay with notifications/health score. Both float with `animate={{ y: [0, -8, 0] }}`. Performance chart bars animate in sequentially.
 - **CSS stacking context gotcha**: Elements with `animate-fade-in` (uses opacity + transform) create isolated stacking contexts. When dropdown menus need to render above sibling animated elements, add explicit `z-index` to the dropdown's parent container, not just the dropdown itself.
 
 ## Database Tables
@@ -126,11 +132,12 @@ supabase/migrations/         # SQL schema with RLS policies (001-008)
 ## Design System
 - **Brand primary:** Dark green `#1B4332` (HSL: 153 46% 18%)
 - **Style:** Premium/editorial, not corporate. White bg, light gray accents
-- **Animations:** fade-in, slide-in-right, scale-in, float, shimmer, highlight-reveal + stagger delays
+- **Animations:** Framer Motion (`motion/react`) for all public pages. Tailwind keyframes still available for dashboard.
 - **Utility classes:** `.font-display`, `.font-body`, `.grain-overlay`, `.stagger-1` through `.stagger-6`
 - Follow `skills/frontend-design/SKILL.md` for all UI work
 - Follow `skills/saas-architecture/SKILL.md` for all backend work
 - Follow `skills/lead-magnet/SKILL.md` for lead magnet / conversion pages
+- Follow `skills/3d-animator/SKILL.md` for animations and 3D effects
 
 ## Pricing Tiers
 - Single: $19/mo — 1 location, review replies only
