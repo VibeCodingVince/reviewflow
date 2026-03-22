@@ -5,17 +5,34 @@
 ---
 
 ## Current Status
-- **Last updated:** 2026-03-22 (Mac session #5)
-- **Phase:** Vercel deployment in progress, choosing domain name
-- **Last session:** Vercel setup + domain brainstorming
-- **Repo:** https://github.com/VibeCodingVince/revclerk
+- **Last updated:** 2026-03-22 (Mac session #6)
+- **Phase:** LIVE — site deployed and fully connected
+- **Last session:** Domain setup, production deployment, all services connected
+- **Repo:** https://github.com/VibeCodingVince/RevClerk
+- **Live URL:** https://revclerk.com
 - **Build status:** Clean (`npm run build` passes)
 - **Supabase project:** `https://vdkujkrurjqklkpofpmz.supabase.co` — all 8 tables, RLS, triggers, indexes live
 - **Dev server:** Running on Mac at http://localhost:3000 (or 3001 if port conflict)
 - **User account:** vincentdaigle91@gmail.com — signed up via Google OAuth, upgraded to Pro tier
 - **Test business:** "Gadaxsym" (has Radar seed data), "Tim Horton" (no data)
+- **Domain:** revclerk.com (Namecheap, nameservers → Vercel)
+- **Vercel project:** `revclerk` (new project, old `reviewflow` project still exists on Vercel)
 
-### What was done this session (2026-03-22, Mac session #5)
+### What was done this session (2026-03-22, Mac session #6)
+1. **Renamed project folder** `ReviewFlow` → `revclerk`, updated all references
+2. **Renamed GitHub repo** to `RevClerk` (GitHub did this, we updated git remote)
+3. **Bought domain** `revclerk.com` on Namecheap
+4. **Pointed nameservers** to Vercel (`ns1.vercel-dns.com`, `ns2.vercel-dns.com`)
+5. **Created new Vercel project** `revclerk` (old `reviewflow` project still exists)
+6. **Pushed all 15 env vars** to new Vercel project, set `NEXT_PUBLIC_APP_URL` to `https://revclerk.com`
+7. **Fixed Vercel build failure** — dashboard pages failed prerender because `"use client"` layout couldn't export `force-dynamic`. Split into server wrapper `layout.tsx` + client `dashboard-layout.tsx`
+8. **Added domain** `revclerk.com` + `www.revclerk.com` to Vercel
+9. **Configured Google OAuth** — added `https://revclerk.com` origin + redirect URI
+10. **Configured Supabase** — added redirect URL + site URL for revclerk.com
+11. **Set up Stripe webhook** — endpoint at `https://revclerk.com/api/stripe/webhook`, webhook secret set on Vercel
+12. **Site is LIVE** at https://revclerk.com
+
+### What was done in session (2026-03-22, Mac session #5)
 1. **Vercel CLI installed** (`sudo npm i -g vercel`)
 2. **Vercel project created** (`vercel` command, linked to repo)
 3. **All env vars pushed to Vercel production** (15 vars from `.env.local`)
@@ -72,15 +89,10 @@
 
 ### What needs to be done next
 **Immediate next steps:**
-1. **Choose and buy a domain** — point it to Vercel
-2. **Run `vercel --prod`** — do the first production deployment
-3. **Update `NEXT_PUBLIC_APP_URL`** — change from `localhost:3000` to the real domain in Vercel env vars
-4. **Update Google OAuth redirect URI** — in Google Cloud Console, add the production URL
-5. **Update Supabase redirect URL** — in Supabase dashboard, add the production URL
-6. **Set up Stripe webhook** — create endpoint in Stripe dashboard pointing to `https://yourdomain.com/api/stripe/webhook`, add `STRIPE_WEBHOOK_SECRET` to Vercel env vars
-7. **Set up cron jobs on VPS** — Vercel free tier only supports daily crons; use VPS `crontab` with curl commands for the 4 cron jobs (every 12h / daily / weekly)
-8. **Connect real Google Business Profile** — enable GBP API in Google Cloud Console, connect a real listing
-9. **Test end-to-end flows** — signup, add business, connect Google, pull reviews, generate AI replies, Pro features
+1. **Set up cron jobs on VPS** — Vercel free tier only supports daily crons; use VPS `crontab` with curl commands for the 4 cron jobs (every 12h / daily / weekly)
+2. **Connect real Google Business Profile** — enable GBP API in Google Cloud Console, connect a real listing
+3. **Test end-to-end flows on production** — signup, add business, connect Google, pull reviews, generate AI replies, Stripe checkout, Pro features
+4. **Clean up old Vercel project** — `reviewflow` project still exists on Vercel, can be deleted
 
 **Polish items:**
 - Translate dashboard pages (currently only public pages have i18n)
@@ -92,6 +104,11 @@
 - Mobile responsive testing for device mockups in hero
 
 ## Lessons Learned / Gotchas
+
+### 2026-03-22 additions (Mac session #6)
+- **`"use client"` files can't export route segment config:** Dashboard layout was `"use client"` so couldn't export `dynamic = 'force-dynamic'`. Split into server `layout.tsx` (thin wrapper with the export) and client `dashboard-layout.tsx` (actual UI). Without this, Vercel build fails trying to prerender pages that need Supabase cookies.
+- **Vercel CLI `vercel domains add` syntax:** When project is linked, use single arg `vercel domains add <domain>`. With project name arg it errors.
+- **Folder rename doesn't break Vercel:** Renaming local folder creates a new Vercel project on next `vercel` command. Old project persists — delete manually if desired.
 
 ### 2026-03-22 additions (Mac session #3)
 - **Framer Motion import path:** Use `motion/react` (NOT `framer-motion`) for Next.js App Router compatibility.
