@@ -157,6 +157,19 @@ supabase/migrations/         # SQL schema with RLS policies (001-008)
 - **Migration 008** has been run on the live Supabase project (as of 2026-03-21)
 - Database is fully provisioned: all 8 tables, RLS policies, triggers, indexes
 
+## Deployment
+- **Hosting:** Vercel (free Hobby tier)
+- **Vercel project:** Linked via CLI (`vercel` command), env vars pushed to production
+- **Domain:** TBD — choosing domain name (RankClerk taken, MyLocalRank premium)
+- **Cron jobs:** Will run on VPS via `crontab` + curl (Vercel free tier only supports daily crons)
+- **Still needed before go-live:**
+  - Buy and connect domain
+  - Run `vercel --prod` for first production deploy
+  - Update `NEXT_PUBLIC_APP_URL` in Vercel env vars
+  - Update Google OAuth redirect URI + Supabase redirect URL with production domain
+  - Set up Stripe webhook → add `STRIPE_WEBHOOK_SECRET` to Vercel env vars
+  - Set up 4 cron jobs on VPS
+
 ## Environment Variables
 See `.env.example` for all required vars. `.env.local` exists with credentials configured (gitignored).
 
@@ -167,7 +180,12 @@ See `.env.example` for all required vars. `.env.local` exists with credentials c
 - ✅ Stripe keys (publishable + secret) and price IDs (Single/Multi/Pro)
 - ✅ CRON_SECRET
 - ✅ Google Places API key (for audit lead magnet)
-- ❌ Still needed: `STRIPE_WEBHOOK_SECRET` (set up when deploying to Vercel)
+- ❌ Still needed: `STRIPE_WEBHOOK_SECRET` (set after Stripe webhook is created)
+
+**Vercel env vars (as of 2026-03-22):**
+- ✅ All 15 env vars pushed to production environment
+- ⚠️ `NEXT_PUBLIC_APP_URL` still set to `http://localhost:3000` — update to real domain
+- ⚠️ `STRIPE_WEBHOOK_SECRET` is empty — set after creating Stripe webhook endpoint
 
 ## Commands
 - `npm run dev` — Start dev server

@@ -5,9 +5,9 @@
 ---
 
 ## Current Status
-- **Last updated:** 2026-03-22 (Mac session #4)
-- **Phase:** Rebrand complete, ready for deployment
-- **Last session:** Full rebrand from ReviewFlow → RankClerk
+- **Last updated:** 2026-03-22 (Mac session #5)
+- **Phase:** Vercel deployment in progress, choosing domain name
+- **Last session:** Vercel setup + domain brainstorming
 - **Repo:** https://github.com/VibeCodingVince/reviewflow
 - **Build status:** Clean (`npm run build` passes)
 - **Supabase project:** `https://vdkujkrurjqklkpofpmz.supabase.co` — all 8 tables, RLS, triggers, indexes live
@@ -15,18 +15,15 @@
 - **User account:** vincentdaigle91@gmail.com — signed up via Google OAuth, upgraded to Pro tier
 - **Test business:** "Gadaxsym" (has Radar seed data), "Tim Horton" (no data)
 
-### What was done this session (2026-03-22, Mac session #4)
-1. **Full rebrand: ReviewFlow → RankClerk**
-   - New color palette: Navy `#0F1D2F` primary + Gold `#D4952A` accent (was dark green `#1B4332`)
-   - New fonts: Instrument Serif (headings) + Inter (body) — replaced DM Serif Display + Outfit
-   - New logo: Ascending bars + checkmark SVG (represents rankings going up + tasks handled)
-   - Created shared `Logo` component at `src/components/logo.tsx` — replaced 6 inline logo instances
-   - Added `--gold` CSS variable + Tailwind `gold` color token
-   - Updated all 15+ "ReviewFlow" text occurrences across source files
-   - Updated favicon.svg with new logo mark
-   - Updated SEO metadata, translations (EN/FR), audit recommendations
-   - Updated all documentation: CLAUDE.md, shared-memory.md, 4 skill files
-   - Build passes (zero TypeScript errors)
+### What was done this session (2026-03-22, Mac session #5)
+1. **Vercel CLI installed** (`sudo npm i -g vercel`)
+2. **Vercel project created** (`vercel` command, linked to repo)
+3. **All env vars pushed to Vercel production** (15 vars from `.env.local`)
+4. **Domain brainstorming** — "RankClerk" taken, "MyLocalRank" premium. Still choosing domain.
+   - Favorites from brainstorming: LocalDash, LocalCommand, RankDesk, ShopPulse, RankPilot, BizWatch
+
+### What was done in session (2026-03-22, Mac session #4)
+1. Full rebrand: ReviewFlow → RankClerk (colors, fonts, logo, all references)
 
 ### What was done in session (2026-03-22, Mac session #3)
 1. **Full i18n system (FR/EN):**
@@ -75,19 +72,15 @@
 
 ### What needs to be done next
 **Immediate next steps:**
-1. **Apply animations to dashboard pages** — currently only public pages have Framer Motion
-2. **Test audit page end-to-end** — search, score, email capture, verify lead in Supabase
-3. **Set up Stripe webhook** — create endpoint in Stripe dashboard pointing to Vercel URL once deployed, add `STRIPE_WEBHOOK_SECRET` to env
-4. **Deploy to Vercel** — connect GitHub repo, add all env vars (including `GOOGLE_PLACES_API_KEY`), configure cron jobs
-5. **Configure Vercel cron jobs:**
-   ```
-   check-reviews:      0 */12 * * *       (every 12 hours)
-   check-performance:  0 2 * * *          (daily 2 AM)
-   generate-tasks:     0 6 * * 1          (weekly Monday 6 AM)
-   publish-posts:      0 */12 * * *       (every 12 hours)
-   ```
-6. **Connect real Google Business Profile** — enable GBP API in Google Cloud Console, connect a real listing
-7. **Test end-to-end flows** — add business, connect Google, pull reviews, generate AI replies, Pro features
+1. **Choose and buy a domain** — point it to Vercel
+2. **Run `vercel --prod`** — do the first production deployment
+3. **Update `NEXT_PUBLIC_APP_URL`** — change from `localhost:3000` to the real domain in Vercel env vars
+4. **Update Google OAuth redirect URI** — in Google Cloud Console, add the production URL
+5. **Update Supabase redirect URL** — in Supabase dashboard, add the production URL
+6. **Set up Stripe webhook** — create endpoint in Stripe dashboard pointing to `https://yourdomain.com/api/stripe/webhook`, add `STRIPE_WEBHOOK_SECRET` to Vercel env vars
+7. **Set up cron jobs on VPS** — Vercel free tier only supports daily crons; use VPS `crontab` with curl commands for the 4 cron jobs (every 12h / daily / weekly)
+8. **Connect real Google Business Profile** — enable GBP API in Google Cloud Console, connect a real listing
+9. **Test end-to-end flows** — signup, add business, connect Google, pull reviews, generate AI replies, Pro features
 
 **Polish items:**
 - Translate dashboard pages (currently only public pages have i18n)
