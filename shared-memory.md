@@ -8,7 +8,7 @@
 - **Last updated:** 2026-03-22 (Mac session #5)
 - **Phase:** Vercel deployment in progress, choosing domain name
 - **Last session:** Vercel setup + domain brainstorming
-- **Repo:** https://github.com/VibeCodingVince/reviewflow
+- **Repo:** https://github.com/VibeCodingVince/revclerk
 - **Build status:** Clean (`npm run build` passes)
 - **Supabase project:** `https://vdkujkrurjqklkpofpmz.supabase.co` — all 8 tables, RLS, triggers, indexes live
 - **Dev server:** Running on Mac at http://localhost:3000 (or 3001 if port conflict)
@@ -23,7 +23,7 @@
    - Favorites from brainstorming: LocalDash, LocalCommand, RankDesk, ShopPulse, RankPilot, BizWatch
 
 ### What was done in session (2026-03-22, Mac session #4)
-1. Full rebrand: ReviewFlow → RankClerk (colors, fonts, logo, all references)
+1. Full rebrand: ReviewFlow → RankClerk (repo/folder now "revclerk") (colors, fonts, logo, all references)
 
 ### What was done in session (2026-03-22, Mac session #3)
 1. **Full i18n system (FR/EN):**

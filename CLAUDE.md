@@ -3,7 +3,7 @@
 ## Project Overview
 A full-stack SaaS app that manages Google Business Profiles with AI. Started as a review auto-responder, now expanded to a full GBP management platform with 3 AI agent features. Built with Next.js 14 (App Router), Supabase, Stripe, and the Anthropic SDK.
 
-**Repo:** https://github.com/VibeCodingVince/reviewflow
+**Repo:** https://github.com/VibeCodingVince/revclerk
 
 ## Tech Stack
 - **Framework:** Next.js 14 (App Router, TypeScript strict mode)

@@ -1,7 +1,7 @@
 # Google OAuth Setup Guide
 
 ## Overview
-This guide walks you through setting up Google OAuth for ReviewFlow authentication.
+This guide walks you through setting up Google OAuth for RevClerk authentication.
 
 ## Prerequisites
 - Supabase project created and configured
@@ -14,7 +14,7 @@ This guide walks you through setting up Google OAuth for ReviewFlow authenticati
 ### 1. Create a Google Cloud Project (if you don't have one)
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
 2. Click "Select a project" → "New Project"
-3. Name: `ReviewFlow` (or your preferred name)
+3. Name: `RevClerk` (or your preferred name)
 4. Click "Create"
 
 ### 2. Enable Google+ API (required for OAuth)
@@ -28,7 +28,7 @@ This guide walks you through setting up Google OAuth for ReviewFlow authenticati
 3. Click "Create"
 
 **App Information:**
-- App name: `ReviewFlow`
+- App name: `RevClerk`
 - User support email: Your email
 - App logo: (optional)
 
@@ -39,7 +39,7 @@ This guide walks you through setting up Google OAuth for ReviewFlow authenticati
 
 **Authorized domains:**
 - Add: `localhost` (for development)
-- Add your production domain later (e.g., `reviewflow.com`)
+- Add your production domain later (e.g., `revclerk.com`)
 
 **Developer contact information:**
 - Add your email
@@ -64,11 +64,11 @@ Click "Back to Dashboard"
 1. Go to "APIs & Services" → "Credentials"
 2. Click "Create Credentials" → "OAuth client ID"
 3. Application type: "Web application"
-4. Name: `ReviewFlow Web Client`
+4. Name: `RevClerk Web Client`
 
 **Authorized JavaScript origins:**
 - `http://localhost:3000` (for dev)
-- Add production URL later (e.g., `https://reviewflow.com`)
+- Add production URL later (e.g., `https://revclerk.com`)
 
 **Authorized redirect URIs:**
 - `http://localhost:3000/api/auth/callback`

@@ -85,7 +85,7 @@ function DashboardMockup() {
               </div>
               <div className="flex-1 bg-[#1a1a1a] rounded-md px-3 py-1 flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full border border-gray-600" />
-                <span className="text-[10px] text-gray-500 font-body">app.reviewflow.io/dashboard</span>
+                <span className="text-[10px] text-gray-500 font-body">app.revclerk.com/dashboard</span>
               </div>
             </div>
 
